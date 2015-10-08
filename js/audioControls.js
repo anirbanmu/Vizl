@@ -1,16 +1,32 @@
-var playControls = document.getElementById("playControls");
-
-function playPause(){
+function playPauseToggle(audioPlayer){
     if (audioPlayer.paused) {
-        console.log('play');
         audioPlayer.play();
-        playControls.className = 'i fontawesome-pause';
+        return;
     }
-    else {
-        console.log('pause');
-        audioPlayer.pause();
-        playControls.className = 'i fontawesome-play';
-    }
+    audioPlayer.pause();
 }
 
-playControls.onclick = playPause;
+function played(playControls) {
+    playControls.className = 'i fontawesome-pause';
+}
+
+function paused(playControls) {
+    playControls.className = 'i fontawesome-play';
+}
+
+$(function () {
+    var playControls = $('#playControls');
+    var audioPlayer = $('#audioPlayer');
+
+    playControls.click(function() {
+        playPauseToggle(audioPlayer[0]);
+    });
+
+    audioPlayer.bind('play', function() {
+        played(playControls[0]);
+    });
+
+    audioPlayer.bind('pause', function() {
+        paused(playControls[0]);
+    });
+});

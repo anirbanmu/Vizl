@@ -1,14 +1,3 @@
-var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-var gainNode = audioCtx.createGain();
-gainNode.connect(audioCtx.destination);
-gainNode.gain.value = 0.5;
-
-var audioPlayer;
-var mediaSource;
-
-var audioAnalyser;
-
 function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     this.frequencyAnalyser = context.createAnalyser();
     this.frequencyAnalyser.fftSize = frequencyFftSize;
@@ -33,15 +22,6 @@ function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     };
 }
 
-window.onload = function(){
-    audioPlayer = document.getElementById('audioPlayer');
-    mediaSource = audioCtx.createMediaElementSource(audioPlayer);
-
-    audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 128, 4096);
-
-    mediaSource.connect(gainNode);
-};
-
 var bgGradientStart;
 var bgGradientEnd;
 
@@ -57,32 +37,22 @@ function getCenter(canvas) {
     return new Vector2d(canvas.width / 2, canvas.height / 2);
 }
 
-function resizeCanvas() {
-    var visContainer = document.getElementById('visContainer');
-    
-    var canvas = document.getElementById('visLayer0');
-    canvas.width  = visContainer.clientWidth;
-    canvas.height  = visContainer.clientHeight;
+function resizeCanvas(canvas0, canvas1, visContainer) {
+    canvas0.width = visContainer.clientWidth;
+    canvas0.height = visContainer.clientHeight;
 
-    canvas = document.getElementById('visLayer1');
-    canvas.width  = visContainer.clientWidth;
-    canvas.height  = visContainer.clientHeight;
-    
-    setBackgroundGradient(getCenter(canvas), new Vector2d(canvas.width, canvas.height));
+    canvas1.width = visContainer.clientWidth;
+    canvas1.height = visContainer.clientHeight;
+
+    setBackgroundGradient(getCenter(canvas0), new Vector2d(canvas1.width, canvas0.height));
 }
 
-window.onresize = resizeCanvas;
-
-function setupStream(url) {
+function setupStream(url, audioPlayer) {
     url = new URL(url + '?client_id=' + clientId);
     audioPlayer.setAttribute('src', url);
 }
 
-function drawTimeDomainVisualizationCore(clockWise, canvas) {
-    var canvasCtx = canvas.getContext("2d");
-
-    var timeData = audioAnalyser.getTimeData();
-
+function drawTimeDomainVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
     var radius = (canvas.height / 7) - 128.0;
 
     var centerX = canvas.width / 2;
@@ -106,19 +76,24 @@ function drawTimeDomainVisualizationCore(clockWise, canvas) {
     canvasCtx.stroke();
 }
 
-function drawTimeDomainVisualization() {
-    drawTimeDomainVisualization1 = requestAnimationFrame(drawTimeDomainVisualization);
-    
+function drawTimeDomainVisualization(canvas, audioAnalyser) {
+    requestAnimationFrame(function() {
+        drawTimeDomainVisualization(canvas, audioAnalyser);
+    });
+
     if (audioPlayer.paused) {
         return;
     }
 
     var canvas = document.getElementById('visLayer1');
     canvas.style.webkitFilter = "blur(1px)";
-    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 
-    drawTimeDomainVisualizationCore(true, canvas);
-    drawTimeDomainVisualizationCore(false, canvas);
+    var canvasCtx = canvas.getContext("2d");
+    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+    var timeData = audioAnalyser.getTimeData();
+    drawTimeDomainVisualizationCore(true, canvas, canvasCtx, timeData);
+    drawTimeDomainVisualizationCore(false, canvas, canvasCtx, timeData);
 }
 
 function drawBars(canvasCtx, center, innerRadius, outerRadius, maxRadius, startingAngle, endingAngle) {
@@ -210,7 +185,6 @@ function drawBarsPerspectiveLazy(canvasCtx, center, innerRadius, outerRadius) {
 }
 
 function drawPerspective(canvasCtx, center, innerRadius, outerRadius, startingAngle, endingAngle) {
-
     var bgGradient = canvasCtx.createLinearGradient(bgGradientStart.x, bgGradientStart.y, bgGradientEnd.x, bgGradientEnd.y);
     bgGradient.addColorStop(0.0, '#ff8080');
     bgGradient.addColorStop(1.0, '#80dbff');
@@ -238,10 +212,6 @@ function drawPerspective(canvasCtx, center, innerRadius, outerRadius, startingAn
     canvasCtx.stroke();
 }
 
-function toRGBA(r, g, b, a) {
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
-}
-
 function drawBarGradient(gradient, magnitude) {
     gradient.addColorStop(0.0, 'rgba(0,0,' + 198 + ',0.02)');
 
@@ -262,14 +232,15 @@ function drawBarGradient(gradient, magnitude) {
     }
 }
 
-function drawCircularVisualization() {
-    drawCircularVisual = requestAnimationFrame(drawCircularVisualization);
-    
+function drawCircularVisualization(canvas, audioAnalyser) {
+    drawCircularVisual = requestAnimationFrame(function() {
+        drawCircularVisualization(canvas, audioAnalyser);
+    });
+
     if (audioPlayer.paused) {
         return;
     }
 
-    var canvas = document.getElementById('visLayer0');
     //canvas.style.webkitFilter = "blur(1px)";
     var canvasCtx = canvas.getContext("2d");
 
@@ -332,21 +303,43 @@ function drawCircularVisualization() {
     drawBarsPerspectiveLazy(canvasCtx, center, radius, maxRadius);
 }
 
-function streamTrack() {
-    resizeCanvas();
-    console.log(document.getElementById('urlInputBar').value);
-    var resolveIdentfierURL = 'https://api.soundcloud.com/resolve.json?url=' + document.getElementById('urlInputBar').value + '&client_id=' + clientId;
+function streamTrack(url, audioPlayer, visLayer0, visLayer1) {
+    console.log(url);
+    var resolveIdentfierURL = 'https://api.soundcloud.com/resolve.json?url=' + url + '&client_id=' + clientId;
     $.getJSON(resolveIdentfierURL, function(resolved) {
         console.log(resolved);
-        setupStream(resolved.stream_url);
-        playPause();
-        drawCircularVisualization();
-        drawTimeDomainVisualization();
+        setupStream(resolved.stream_url, audioPlayer);
     });
 }
 
 $(function () {
-    $("#streamSubmit").click(function() {
-        streamTrack();
+    var visContainer = document.getElementById('visContainer');
+    var visLayer0 = document.getElementById('visLayer0');
+    var visLayer1 = document.getElementById('visLayer1');
+
+    resizeCanvas(visLayer0, visLayer1, visContainer);
+    $(window).bind('resize', function() {
+        resizeCanvas(visLayer0, visLayer1, visContainer);
     });
+
+    var urlInputBar = document.getElementById('urlInputBar');
+    var audioPlayer = document.getElementById('audioPlayer');
+    $("#streamSubmit").click(function() {
+        streamTrack(urlInputBar.value, audioPlayer, visLayer0, visLayer1);
+    });
+
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    var gainNode = audioCtx.createGain();
+    gainNode.connect(audioCtx.destination);
+    gainNode.gain.value = 0.5;
+
+    var mediaSource = audioCtx.createMediaElementSource(audioPlayer);
+
+    var audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 128, 4096);
+
+    mediaSource.connect(gainNode);
+
+    drawCircularVisualization(visLayer0, audioAnalyser);
+    drawTimeDomainVisualization(visLayer1, audioAnalyser);
 });

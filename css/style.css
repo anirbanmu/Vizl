@@ -32,31 +32,32 @@ html, body {
 }
 
 .i:hover {
-	cursor: pointer;}
-
-.i:active {
-  border: none;
-  color: rgba(250, 250, 250, 0.95);
+  cursor: pointer;
 }
 
-.i:focus {
-  outline: none;
-}
+  .i:active {
+    border: none;
+    color: rgba(250, 250, 250, 0.95);
+  }
 
-#logo {
-  background: #ff8080;
-  color: white;
-  font-family: "Fugaz One", cursive;
-  flex: 1;
-}
+  .i:focus {
+    outline: none;
+  }
 
-#logo:hover {
-	cursor: default;
-}
+  #logo {
+    background: #ff8080;
+    color: white;
+    font-family: "Fugaz One", cursive;
+    flex: 1;
+  }
 
-#urlInputBar {
+  #logo:hover {
+   cursor: default;
+ }
+
+ #urlInputBar {
   color: #ff8080;
-	flex: 4;
+  flex: 4;
 }
 
 #urlInputBar:hover {
@@ -85,10 +86,10 @@ button {
 }
 
 canvas {
-    margin: 0;
-    z-index: 0;
-    position: absolute;
-    width: 100%;
-    height: 100%;
+  margin: 0;
+  z-index: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
 
