@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Vizl</title>
+    <link href='https://fonts.googleapis.com/css?family=Fugaz+One' rel='stylesheet' type='text/css'>
+
+    <script src='http://code.jquery.com/jquery-2.1.4.min.js'></script>
+    <script src='js/util.js'></script>
+    <script src='js/config.js'></script>
+    <script src='js/main.js'></script>
+
+    <link rel="stylesheet" href="css/style.css">
+ 
+	<audio id="audioPlayer" crossorigin="anonymous" preload autobuffer></audio>
+  </head>
+
+  <body>
+
+	<div id='top'>
+		<div id='userInput'>
+		  <div class='i'id='logo'>Vizl</div>
+		  <input class='i' id='urlInputBar' type='url'>
+		  <button class='i' id='streamSubmit'>Submit</button>
+		</div>
+		<div id='control'>
+		  <button class='i fontawesome-volume-up'></button>
+		  <button id="playControls" class='i fontawesome-play'></button>
+		  <button class='i fontawesome-resize-full'></button>
+		</div>
+	</div>
+  
+	<div id='visContainer' style='height: 100vh;'>
+      <canvas id='visLayer0' style='z-index: 0; position: absolute; left: 0; top: 0;'></canvas>
+      <canvas id='visLayer1' style='z-index: 1; position: absolute; left: 0; top: 0;'></canvas>
+	</div>
+
+  <script src="js/audioControls.js"></script>
+
+  </body>
+</html>

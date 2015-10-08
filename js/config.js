@@ -1,0 +1,1 @@
+var clientId = 'SOUNDCLOUD_API_HERE';

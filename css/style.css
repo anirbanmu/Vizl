@@ -1,0 +1,94 @@
+@import url(http://weloveiconfonts.com/api/?family=fontawesome);
+/* fontawesome */
+[class*="fontawesome-"]:before {
+  font-family: "FontAwesome", sans-serif;
+}
+
+html, body {
+  margin: 0;
+  background: linear-gradient(45deg, #ff8080, #80dbff);
+  width: 100%;
+  height: 100%;
+}
+
+#top {
+  position: fixed;
+  width: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  color: rgba(0, 0, 0, 0.85);
+  z-index: 3;
+}
+
+.i {
+  flex: 1;
+  font-size: 1.24em;
+  line-height: 1.84em;
+  flex-wrap: rowrap;
+  border: none;
+  background: none;
+  text-align: center;
+  font-family: roboto;
+  transition: all 50ms ease;
+}
+
+.i:hover {
+	cursor: pointer;}
+
+.i:active {
+  border: none;
+  color: rgba(250, 250, 250, 0.95);
+}
+
+.i:focus {
+  outline: none;
+}
+
+#logo {
+  background: #ff8080;
+  color: white;
+  font-family: "Fugaz One", cursive;
+  flex: 1;
+}
+
+#logo:hover {
+	cursor: default;
+}
+
+#urlInputBar {
+  color: #ff8080;
+	flex: 4;
+}
+
+#urlInputBar:hover {
+}
+
+#userInput {
+  display: flex;
+  background: rgba(250, 250, 250, 0.78);
+}
+
+#control {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(250, 250, 250, 0.78);
+}
+
+#control .i {
+  flex: 1;
+}
+
+button {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+canvas {
+    margin: 0;
+    z-index: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
