@@ -88,7 +88,7 @@ button {
   color: rgba(0, 0, 0, 0.85);
 }
 
-canvas {
+canvas, #progressBar {
   margin: 0;
   z-index: 0;
   position: absolute;
@@ -102,4 +102,13 @@ canvas {
   background-color: rgba(0, 0, 0, 0.05);
   flex: 0;
   height: 0.23em;
+  width: 100%
+  overflow: hidden;
   }
+#bar {
+  position: relative;
+  background: #80dbff;
+  transition: all 50ms;
+  width: 45%;
+  height: 100%
+}
