@@ -112,6 +112,6 @@ canvas, #progressBar {
   position: relative;
   background: #80dbff;
   transition: all 50ms;
-  width: 45%;
+  width: 0%;
   height: 100%
 }
