@@ -14,6 +14,11 @@ function paused(playControls) {
     playControls.className = 'i fontawesome-play';
 }
 
+function updateProgress(audioPlayer, bar) {
+    var progress = 100 * audioPlayer.currentTime / audioPlayer.duration;
+    bar.style.width = progress + '%';
+}
+
 $(function () {
     var playControls = $('#playControls');
     var audioPlayer = $('#audioPlayer');
@@ -28,5 +33,10 @@ $(function () {
 
     audioPlayer.bind('pause', function() {
         paused(playControls[0]);
+    });
+
+    var progressBar = document.getElementById('bar');
+    audioPlayer.bind('timeupdate', function() {
+        updateProgress(audioPlayer[0], progressBar);
     });
 });
