@@ -22,29 +22,47 @@ function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     };
 }
 
-var bgGradientStart;
-var bgGradientEnd;
+function GradientCalculator(angle, gradientStartColor, gradientEndColor) {
+    this.angle = new Angle(angle * Math.PI / 180);
+    this.gradientStartColor = gradientStartColor;
+    this.gradientEndColor = gradientEndColor;
 
-function setBackgroundGradient(center, dimensions) {
-    var angle = new Angle(45 * Math.PI / 180);
-    var gradientLineLength = Math.abs(dimensions.x * angle.sin) + Math.abs(dimensions.y * angle.cos);
+    this.start = new Vector2d(0, 0);
+    this.end = new Vector2d(0, 0);
+    this.size = new Vector2d(0, 0);
 
-    bgGradientStart = new Vector2d(center.x - gradientLineLength * angle.cos / 2, center.y + gradientLineLength * angle.sin / 2);
-    bgGradientEnd = new Vector2d(center.x + gradientLineLength * angle.cos / 2, center.y - gradientLineLength * angle.sin / 2);
+    this.setGradient = function(center, dimensions) {
+        if (dimensions === this.size) {
+            return;
+        }
+
+        this.size = dimensions;
+
+        var gradientLineLength = Math.abs(dimensions.x * this.angle.sin) + Math.abs(dimensions.y * this.angle.cos);
+        this.start = new Vector2d(center.x - gradientLineLength * this.angle.cos / 2, center.y + gradientLineLength * this.angle.sin / 2);
+        this.end = new Vector2d(center.x + gradientLineLength * this.angle.cos / 2, center.y - gradientLineLength * this.angle.sin / 2);
+    };
+
+    this.getGradient = function(canvasCtx) {
+        var bgGradient = canvasCtx.createLinearGradient(this.start.x, this.start.y, this.end.x, this.end.y);
+        bgGradient.addColorStop(0.0, this.gradientStartColor);
+        bgGradient.addColorStop(1.0, this.gradientEndColor);
+        return bgGradient;
+    }
 }
 
 function getCenter(canvas) {
     return new Vector2d(canvas.width / 2, canvas.height / 2);
 }
 
-function resizeCanvas(canvas0, canvas1, visContainer) {
+function resizeCanvas(canvas0, canvas1, visContainer, gradientCalculator) {
     canvas0.width = visContainer.clientWidth;
     canvas0.height = visContainer.clientHeight;
 
     canvas1.width = visContainer.clientWidth;
     canvas1.height = visContainer.clientHeight;
 
-    setBackgroundGradient(getCenter(canvas0), new Vector2d(canvas1.width, canvas0.height));
+    gradientCalculator.setGradient(getCenter(canvas0), new Vector2d(visContainer.clientWidth, visContainer.clientWidth);
 }
 
 function setupStream(url, audioPlayer) {
@@ -85,7 +103,6 @@ function drawTimeDomainVisualization(canvas, audioAnalyser) {
         return;
     }
 
-    var canvas = document.getElementById('visLayer1');
     canvas.style.webkitFilter = "blur(1px)";
 
     var canvasCtx = canvas.getContext("2d");
@@ -96,62 +113,7 @@ function drawTimeDomainVisualization(canvas, audioAnalyser) {
     drawTimeDomainVisualizationCore(false, canvas, canvasCtx, timeData);
 }
 
-function drawBars(canvasCtx, center, innerRadius, outerRadius, maxRadius, startingAngle, endingAngle) {
-    var numBars = 20;
-    var radialIncrement = (maxRadius - innerRadius) / numBars;
-
-    var maxLineWidth = 8;
-    var minLineWidth = 2;
-
-    var lineWidthDecrement = (maxLineWidth - minLineWidth) / numBars;
-
-    canvasCtx.strokeStyle = 'rgb(8,8,8)';
-
-    for (var i = 0; i < numBars; ++i) {
-        var radius = innerRadius + radialIncrement * i;
-        if (radius >= outerRadius) {
-            break;
-        }
-
-        canvasCtx.lineWidth = maxLineWidth - lineWidthDecrement * (numBars - 1 - i);
-
-        canvasCtx.beginPath();
-        canvasCtx.arc(center.x, center.y, radius, startingAngle, endingAngle, false);
-        canvasCtx.stroke();
-    }
-}
-
-function drawBarsPerspective(canvasCtx, center, innerRadius, outerRadius, maxRadius, startingAngle, endingAngle) {
-    var numBars = 22;
-    var radialIncrement = (maxRadius - innerRadius) / numBars;
-
-    var multiplier = 2 / (1 + numBars);
-
-    var maxLineWidth = 8;
-    var minLineWidth = 2;
-
-    var lineWidthDecrement = (maxLineWidth - minLineWidth) / numBars;
-
-    canvasCtx.strokeStyle = 'rgb(8,8,8)';
-
-    var lastRadius = innerRadius;
-    for (var i = 0; i < numBars; ++i) {
-        var radius = lastRadius + radialIncrement * (multiplier * (i + 1));
-        if (radius >= outerRadius) {
-            break;
-        }
-
-        canvasCtx.lineWidth = maxLineWidth - lineWidthDecrement * (numBars - 1 - i);
-
-        canvasCtx.beginPath();
-        canvasCtx.arc(center.x, center.y, radius, startingAngle, endingAngle, false);
-        canvasCtx.stroke();
-
-        lastRadius = radius;
-    }
-}
-
-function drawBarsPerspectiveLazy(canvasCtx, center, innerRadius, outerRadius) {
+function drawBarsPerspectiveLazy(canvasCtx, center, innerRadius, outerRadius, gradientCalculator) {
     var numBars = 22;
     var radialIncrement = (outerRadius - innerRadius) / numBars;
 
@@ -162,10 +124,7 @@ function drawBarsPerspectiveLazy(canvasCtx, center, innerRadius, outerRadius) {
 
     var lineWidthDecrement = (maxLineWidth - minLineWidth) / numBars;
 
-    var bgGradient = canvasCtx.createLinearGradient(bgGradientStart.x, bgGradientStart.y, bgGradientEnd.x, bgGradientEnd.y);
-    bgGradient.addColorStop(0.0, '#ff8080');
-    bgGradient.addColorStop(1.0, '#80dbff');
-    canvasCtx.strokeStyle = bgGradient;
+    canvasCtx.strokeStyle = gradientCalculator.getGradient(canvasCtx);
 
     var lastRadius = innerRadius;
     for (var i = 0; i < numBars - 1; ++i) {
@@ -184,10 +143,8 @@ function drawBarsPerspectiveLazy(canvasCtx, center, innerRadius, outerRadius) {
     }
 }
 
-function drawPerspective(canvasCtx, center, innerRadius, outerRadius, startingAngle, endingAngle) {
-    var bgGradient = canvasCtx.createLinearGradient(bgGradientStart.x, bgGradientStart.y, bgGradientEnd.x, bgGradientEnd.y);
-    bgGradient.addColorStop(0.0, '#ff8080');
-    bgGradient.addColorStop(1.0, '#80dbff');
+function drawPerspective(canvasCtx, center, innerRadius, outerRadius, startingAngle, endingAngle, gradientCalculator) {
+    var bgGradient = gradientCalculator.getGradient(canvasCtx);
 
     canvasCtx.fillStyle = bgGradient;
     canvasCtx.strokeStyle = bgGradient;
@@ -232,9 +189,9 @@ function drawBarGradient(gradient, magnitude) {
     }
 }
 
-function drawCircularVisualization(canvas, audioAnalyser) {
+function drawCircularVisualization(canvas, audioAnalyser, gradientCalculator) {
     drawCircularVisual = requestAnimationFrame(function() {
-        drawCircularVisualization(canvas, audioAnalyser);
+        drawCircularVisualization(canvas, audioAnalyser, gradientCalculator);
     });
 
     if (audioPlayer.paused) {
@@ -268,8 +225,6 @@ function drawCircularVisualization(canvas, audioAnalyser) {
         barHeight = frequencyData[i];
 
         canvasCtx.lineWidth = 1.5;
-        //canvasCtx.strokeStyle = 'rgb(50,50,50)';
-        canvasCtx.strokeStyle = 'rgb(8,8,8)';
         canvasCtx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
 
         var angleOffset = angularIncrement * 0.05;
@@ -297,10 +252,10 @@ function drawCircularVisualization(canvas, audioAnalyser) {
         canvasCtx.fillStyle = gradient;
         canvasCtx.fill();
 
-        drawPerspective(canvasCtx, center, radius, outerRadius, startingAngle.angle, endingAngle.angle);
+        drawPerspective(canvasCtx, center, radius, outerRadius, startingAngle.angle, endingAngle.angle, gradientCalculator);
     }
 
-    drawBarsPerspectiveLazy(canvasCtx, center, radius, maxRadius);
+    drawBarsPerspectiveLazy(canvasCtx, center, radius, maxRadius, gradientCalculator);
 }
 
 function streamTrack(url, audioPlayer, visLayer0, visLayer1) {
@@ -312,14 +267,25 @@ function streamTrack(url, audioPlayer, visLayer0, visLayer1) {
     });
 }
 
+// Get linear gradient properties from given style
+function getBackgroundGradient(style) {
+    var re = /linear-gradient\(\s*(\d+)deg\s*,\s*(rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\))\s*,\s*(rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\))\s*\)/;
+    return re.exec(style);
+}
+
 $(function () {
     var visContainer = document.getElementById('visContainer');
     var visLayer0 = document.getElementById('visLayer0');
     var visLayer1 = document.getElementById('visLayer1');
 
-    resizeCanvas(visLayer0, visLayer1, visContainer);
+    var backgroundStyle = window.getComputedStyle(document.body, null).getPropertyValue('background');
+    var matched = getBackgroundGradient(backgroundStyle);
+
+    var gradientCalculator = new GradientCalculator(matched[1], matched[2], matched[3]);
+
+    resizeCanvas(visLayer0, visLayer1, visContainer, gradientCalculator);
     $(window).bind('resize', function() {
-        resizeCanvas(visLayer0, visLayer1, visContainer);
+        resizeCanvas(visLayer0, visLayer1, visContainer, gradientCalculator);
     });
 
     var urlInputBar = document.getElementById('urlInputBar');
@@ -340,6 +306,6 @@ $(function () {
 
     mediaSource.connect(gainNode);
 
-    drawCircularVisualization(visLayer0, audioAnalyser);
+    drawCircularVisualization(visLayer0, audioAnalyser, gradientCalculator);
     drawTimeDomainVisualization(visLayer1, audioAnalyser);
 });
