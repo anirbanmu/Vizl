@@ -62,7 +62,7 @@ function resizeCanvas(canvas0, canvas1, visContainer, gradientCalculator) {
     canvas1.width = visContainer.clientWidth;
     canvas1.height = visContainer.clientHeight;
 
-    gradientCalculator.setGradient(getCenter(canvas0), new Vector2d(visContainer.clientWidth, visContainer.clientWidth));
+    gradientCalculator.setGradient(getCenter(canvas0), new Vector2d(visContainer.clientWidth, visContainer.clientHeight));
 }
 
 function setupStream(url, audioPlayer) {
