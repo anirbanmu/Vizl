@@ -273,7 +273,18 @@ function getBackgroundGradient(style) {
     return re.exec(style);
 }
 
+// Gets all URL variables
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m, key, value) {
+                                                                            vars[key] = value;
+                                                                        });
+    return vars;
+}
+
 $(function () {
+    var urlVars = getUrlVars();
+
     var visContainer = document.getElementById('visContainer');
     var visLayer0 = document.getElementById('visLayer0');
     var visLayer1 = document.getElementById('visLayer1');
@@ -288,18 +299,13 @@ $(function () {
         resizeCanvas(visLayer0, visLayer1, visContainer, gradientCalculator);
     });
 
-    var urlInputBar = document.getElementById('urlInputBar');
-    var audioPlayer = document.getElementById('audioPlayer');
-    $("#streamSubmit").click(function() {
-        streamTrack(urlInputBar.value, audioPlayer, visLayer0, visLayer1);
-    });
-
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     var gainNode = audioCtx.createGain();
     gainNode.connect(audioCtx.destination);
     gainNode.gain.value = 0.5;
 
+    var audioPlayer = document.getElementById('audioPlayer');
     var mediaSource = audioCtx.createMediaElementSource(audioPlayer);
 
     var audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 128, 4096);
@@ -308,4 +314,14 @@ $(function () {
 
     drawCircularVisualization(visLayer0, audioAnalyser, gradientCalculator);
     drawTimeDomainVisualization(visLayer1, audioAnalyser);
+
+    var urlInputBar = document.getElementById('urlInputBar');
+    $("#streamSubmit").click(function() {
+        streamTrack(urlInputBar.value, audioPlayer, visLayer0, visLayer1);
+    });
+
+    if (urlVars['trackURL'] !== undefined) {
+        urlInputBar.value = urlVars['trackURL'];
+        streamTrack(urlInputBar.value, audioPlayer, visLayer0, visLayer1);
+    }
 });
