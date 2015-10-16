@@ -55,14 +55,13 @@ function getCenter(canvas) {
     return new Vector2d(canvas.width / 2, canvas.height / 2);
 }
 
-function resizeCanvas(canvas0, canvas1, visContainer, gradientCalculator) {
-    canvas0.width = visContainer.clientWidth;
-    canvas0.height = visContainer.clientHeight;
+function resizeCanvas(canvases, visContainer, gradientCalculator) {
+    canvases.forEach(function(canvas) {
+        canvas.width = visContainer.clientWidth;
+        canvas.height = visContainer.clientHeight;
+    });
 
-    canvas1.width = visContainer.clientWidth;
-    canvas1.height = visContainer.clientHeight;
-
-    gradientCalculator.setGradient(getCenter(canvas0), new Vector2d(visContainer.clientWidth, visContainer.clientHeight));
+    gradientCalculator.setGradient(getCenter(canvases[0]), new Vector2d(visContainer.clientWidth, visContainer.clientHeight));
 }
 
 function setupStream(url, audioPlayer) {
@@ -258,7 +257,7 @@ function drawCircularVisualization(canvas, audioAnalyser, gradientCalculator) {
     drawBarsPerspectiveLazy(canvasCtx, center, radius, maxRadius, gradientCalculator);
 }
 
-function streamTrack(url, audioPlayer, visLayer0, visLayer1) {
+function streamTrack(url, audioPlayer) {
     console.log(url);
     var resolveIdentfierURL = 'https://api.soundcloud.com/resolve.json?url=' + url + '&client_id=' + clientId;
     $.getJSON(resolveIdentfierURL, function(resolved) {
@@ -282,21 +281,30 @@ function getUrlVars() {
     return vars;
 }
 
+function insertVisualizationCanvases(visContainer, layerCount) {
+    var canvases = [];
+    for (i = 0; i < layerCount; ++i) {
+        var newCanvas = $("<canvas style='z-index: " + i + "; position: absolute; left: 0; top: 0;'></canvas>");
+        visContainer.append(newCanvas);
+        canvases[i] = newCanvas[0];
+    }
+    return canvases;
+}
+
 $(function () {
     var urlVars = getUrlVars();
-
-    var visContainer = document.getElementById('visContainer');
-    var visLayer0 = document.getElementById('visLayer0');
-    var visLayer1 = document.getElementById('visLayer1');
 
     var backgroundStyle = window.getComputedStyle(document.body, null).getPropertyValue('background');
     var matched = getBackgroundGradient(backgroundStyle);
 
     var gradientCalculator = new GradientCalculator(matched[1], matched[2], matched[3]);
 
-    resizeCanvas(visLayer0, visLayer1, visContainer, gradientCalculator);
+    var visContainer = $('#visContainer');
+    var canvases = insertVisualizationCanvases(visContainer, 2);
+
+    resizeCanvas(canvases, visContainer[0], gradientCalculator);
     $(window).bind('resize', function() {
-        resizeCanvas(visLayer0, visLayer1, visContainer, gradientCalculator);
+        resizeCanvas(canvases, visContainer[0], gradientCalculator);
     });
 
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -312,16 +320,16 @@ $(function () {
 
     mediaSource.connect(gainNode);
 
-    drawCircularVisualization(visLayer0, audioAnalyser, gradientCalculator);
-    drawTimeDomainVisualization(visLayer1, audioAnalyser);
+    drawCircularVisualization(canvases[0], audioAnalyser, gradientCalculator);
+    drawTimeDomainVisualization(canvases[1], audioAnalyser);
 
     var urlInputBar = document.getElementById('urlInputBar');
     $("#streamSubmit").click(function() {
-        streamTrack(urlInputBar.value, audioPlayer, visLayer0, visLayer1);
+        streamTrack(urlInputBar.value, audioPlayer);
     });
 
     if (urlVars['trackURL'] !== undefined) {
         urlInputBar.value = urlVars['trackURL'];
-        streamTrack(urlInputBar.value, audioPlayer, visLayer0, visLayer1);
+        streamTrack(urlInputBar.value, audioPlayer);
     }
 });
