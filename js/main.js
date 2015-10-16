@@ -209,6 +209,25 @@ function addBarGradientColorStops(gradient, magnitude) {
     }
 }
 
+// Draw a gradient bar (radially) from angles[0] to angle[1] & radii[0] to radii[1]
+function drawBar(canvasCtx, gradientCalculator, center, angles, radii, magnitude) {
+    canvasCtx.beginPath();
+
+    canvasCtx.arc(center.x, center.y, radii[0], angles[0].angle, angles[1].angle, false);
+    canvasCtx.lineTo(center.x + angles[1].cos * radii[1], center.y + angles[1].sin * radii[1]);
+    canvasCtx.arc(center.x, center.y, radii[1], angles[1].angle, angles[0].angle, true);
+    canvasCtx.lineTo(center.x + angles[0].cos * radii[0], center.y + angles[0].sin * radii[0]);
+
+    var midAngle = new Angle((angles[0].angle + angles[1].angle) / 2);
+
+    var gradient = canvasCtx.createLinearGradient(center.x + midAngle.cos * radii[0], center.y + midAngle.sin * radii[0], center.x + midAngle.cos * radii[1], center.y + midAngle.sin * radii[1]);
+    addBarGradientColorStops(gradient, magnitude);
+    canvasCtx.fillStyle = gradient;
+    canvasCtx.fill();
+
+    drawPerspective(canvasCtx, center, radii[0], radii[1], angles[0].angle, angles[1].angle, gradientCalculator);
+}
+
 function radiusMultiplier(frequencyData) {
     var rMultiplier = 0;
     for (i = 0; i < frequencyData.length / 4; i++) {
@@ -242,35 +261,15 @@ function drawCircularVisualization(canvas, audioHub, gradientCalculator) {
     var maxRadius = radius + canvas.height * 0.75 / 2;
 
     for (i = 0; i < frequencyBufferLength; i++) {
-        barHeight = frequencyData[i];
-
-        canvasCtx.lineWidth = 1.5;
-        canvasCtx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
-
         var angleOffset = angularIncrement * 0.05;
+        var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
 
-        var startingAngle = new Angle(angularIncrement * i + angleOffset);
-        var endingAngle = new Angle(angularIncrement * (i + 1) - angleOffset);
+        var magnitude = frequencyData[i] / 255;
 
-        var magnitude = barHeight / 255;
+        // From inner radius to outer radius
+        var radii = [radius, radius + (magnitude * (canvas.height * 0.6 / 2))];
 
-        var outerRadius = radius + (magnitude * (canvas.height * 0.6 / 2));
-
-        canvasCtx.beginPath();
-
-        canvasCtx.arc(center.x, center.y, radius, startingAngle.angle, endingAngle.angle, false);
-        canvasCtx.lineTo(center.x + endingAngle.cos * outerRadius, center.y + endingAngle.sin * outerRadius);
-        canvasCtx.arc(center.x, center.y, outerRadius, endingAngle.angle, startingAngle.angle, true);
-        canvasCtx.lineTo(center.x + startingAngle.cos * radius, center.y + startingAngle.sin * radius);
-
-        var midAngle = new Angle(angularIncrement * (i + 0.5));
-
-        var gradient = canvasCtx.createLinearGradient(center.x + midAngle.cos * radius, center.y + midAngle.sin * radius, center.x + midAngle.cos * outerRadius, center.y + midAngle.sin * outerRadius);
-        addBarGradientColorStops(gradient, barHeight / 255);
-        canvasCtx.fillStyle = gradient;
-        canvasCtx.fill();
-
-        drawPerspective(canvasCtx, center, radius, outerRadius, startingAngle.angle, endingAngle.angle, gradientCalculator);
+        drawBar(canvasCtx, gradientCalculator, center, angles, radii, magnitude);
     }
 
     drawBarsPerspectiveLazy(canvasCtx, center, radius, maxRadius, gradientCalculator);
