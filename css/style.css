@@ -56,12 +56,15 @@ li {
 }
 
 #feed {
-  flexflow: column;
   width: 90%;
   margin: 0em auto 0 auto;
+  display: flex;
+  flex-flow: column;
 }
 
 .card {
+  width: 100%;
+  align-self: flex-start;
   background: none;
   font-size: 1.24em;
   display: flex;
@@ -130,3 +133,14 @@ canvas {
   min-height: 4em;
   visibility: hidden;
   display: none;}
+#progressBar {
+  width: 24%;
+  height: 1.24em;
+  border: solid;
+  border-width: 0.1em;
+  display: flex;
+}
+#bar {
+  margin: 0.12em;
+  background: #e74c3c;
+  transition: all 60ms;}
