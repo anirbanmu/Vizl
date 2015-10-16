@@ -10,7 +10,7 @@ html, body {
   padding: 0;
   background: linear-gradient(45deg, #2c3e50, #1d1d1d);
   background-attachment: fixed;
-  overflow-y: hidden
+  overflow-y: hidden;
 }
 
 #container {
@@ -91,6 +91,7 @@ li {
   -ms-user-select: none;
   user-select: none;
   font-size: 1.2em;
+  width: 1.2em;
 }
 
 .i:hover {
