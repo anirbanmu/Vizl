@@ -67,6 +67,8 @@ li {
   display: flex;
   border: solid;
   border-width: 0.12em;
+  margin: .41em 0 .41em 0;
+  transition: all 500ms ease
 }
 
 #info {
@@ -124,3 +126,7 @@ canvas {
   
   transiiton: all 500ms;
 }
+#options {
+  min-height: 4em;
+  visibility: hidden;
+  display: none;}
