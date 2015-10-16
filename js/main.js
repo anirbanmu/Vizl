@@ -109,7 +109,7 @@ function drawTimeDomainVisualizationCore(clockWise, canvas, canvasCtx, timeData)
 
     canvasCtx.lineWidth = 1;
     canvasCtx.lineJoin = 'round';
-    canvasCtx.strokeStyle = 'rgb(198, 0, 0)';
+    canvasCtx.strokeStyle = 'rgb(231, 76, 60)';
 
     canvasCtx.stroke();
 }
