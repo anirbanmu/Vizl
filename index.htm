@@ -16,22 +16,30 @@
 
   <body>
 
-	<div id='top'>
-		<div id='userInput'>
-		  <div id='logo' class="i">Vizl</div>
-		  <input class='i' id='urlInputBar' type='url'>
-		  <button class='i' id='streamSubmit'>Submit</button>
-		</div>
-		<div id='control'>
-          <div id="progressBar">
-            <div id="bar"></div>
-          </div>
-		  <button class='i fontawesome-volume-up'></button>
-		  <div id="trackInfo" class="i">Track name goes here.</div>
-		  <button id="playControls" class='i fontawesome-play'></button>
-		  <button class='i fontawesome-resize-full'></button>
-		</div>
-	</div>
+<div id='container'>
+  <div id='topbar'>
+    <div id='logo'>Logo</div>
+    <ul id='menu'>
+      
+      <div id='progressBar'>
+        <div id='bar'></div>
+      </div>
+      <li id='trackInfo'></li>
+      <li id='playControls' class='fontawesome-play i'></li>
+      <li class='fontawesome-cog i'></li>
+    </ul>
+  </div>
+  <div id='feed'>
+    <div id="options" class='card'>
+      
+    </div>
+    <div class='card'>
+      <input class='i' id='urlInputBar'>
+      <button class='i' id='streamSubmit'>Submit</button>
+    </div>
+  </div>
+</div>
+
 
 	<div id='visContainer' style='height: 100vh;'></div>
 
