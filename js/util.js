@@ -3,6 +3,11 @@ function Vector2d(x, y) {
     this.y = y;
 }
 
+function Pair(first, second) {
+    this.first = first;
+    this.second = second;
+}
+
 function Vector3d(x, y ,z) {
     this.x = y;
     this.y = y;
