@@ -1,52 +1,78 @@
 function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
-    this.frequencyAnalyser = context.createAnalyser();
-    this.frequencyAnalyser.fftSize = frequencyFftSize;
-    this.frequencyAnalyser.smoothingTimeConstant = 0.89;
-    this.frequencyData = new Uint8Array(this.frequencyAnalyser.frequencyBinCount);
-    source.connect(this.frequencyAnalyser);
+    var frequencyAnalyser = context.createAnalyser();
+    frequencyAnalyser.fftSize = frequencyFftSize;
+    frequencyAnalyser.smoothingTimeConstant = 0.89;
+    frequencyData = new Uint8Array(frequencyAnalyser.frequencyBinCount);
+    source.connect(frequencyAnalyser);
 
-    this.timeAnalyser = context.createAnalyser();
-    this.timeAnalyser.fftSize = timeFftSize;
-    this.timeAnalyser.smoothingTimeConstant = 1;
-    this.timeData = new Uint8Array(this.timeAnalyser.frequencyBinCount);
-    source.connect(this.timeAnalyser);
+    var timeAnalyser = context.createAnalyser();
+    timeAnalyser.fftSize = timeFftSize;
+    timeAnalyser.smoothingTimeConstant = 1;
+    timeData = new Uint8Array(timeAnalyser.frequencyBinCount);
+    source.connect(timeAnalyser);
 
     this.getFrequencyData = function() {
-        this.frequencyAnalyser.getByteFrequencyData(this.frequencyData);
-        return this.frequencyData.slice();
+        frequencyAnalyser.getByteFrequencyData(frequencyData);
+        return frequencyData.slice();
     };
 
     this.getTimeData = function() {
-        this.timeAnalyser.getByteTimeDomainData(this.timeData);
-        return this.timeData.slice();
+        timeAnalyser.getByteTimeDomainData(timeData);
+        return timeData.slice();
+    };
+}
+
+function AudioHub(audioPlayer) {
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    var gainNode = audioCtx.createGain();
+    gainNode.connect(audioCtx.destination);
+    gainNode.gain.value = 0.5;
+
+    var mediaSource = audioCtx.createMediaElementSource(audioPlayer[0]);
+    mediaSource.connect(gainNode);
+
+    var audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 128, 4096);
+
+    this.getAudioAnalyser = function() {
+        return audioAnalyser;
+    };
+
+    this.paused = function() {
+        return audioPlayer[0].paused;
+    };
+
+    this.streamTrack = function(url) {
+        url = new URL(url + '?client_id=' + clientId);
+        audioPlayer[0].setAttribute('src', url);
     };
 }
 
 function GradientCalculator(angle, gradientStartColor, gradientEndColor) {
-    this.angle = new Angle(angle * Math.PI / 180);
-    this.gradientStartColor = gradientStartColor;
-    this.gradientEndColor = gradientEndColor;
+    var angle = new Angle(angle * Math.PI / 180);
+    var gradientStartColor = gradientStartColor;
+    var gradientEndColor = gradientEndColor;
 
-    this.start = new Vector2d(0, 0);
-    this.end = new Vector2d(0, 0);
-    this.size = new Vector2d(0, 0);
+    var start = new Vector2d(0, 0);
+    var end = new Vector2d(0, 0);
+    var size = new Vector2d(0, 0);
 
     this.setGradient = function(center, dimensions) {
-        if (dimensions === this.size) {
+        if (dimensions === size) {
             return;
         }
 
-        this.size = dimensions;
+        size = dimensions;
 
-        var gradientLineLength = Math.abs(dimensions.x * this.angle.sin) + Math.abs(dimensions.y * this.angle.cos);
-        this.start = new Vector2d(center.x - gradientLineLength * this.angle.cos / 2, center.y + gradientLineLength * this.angle.sin / 2);
-        this.end = new Vector2d(center.x + gradientLineLength * this.angle.cos / 2, center.y - gradientLineLength * this.angle.sin / 2);
+        var gradientLineLength = Math.abs(dimensions.x * angle.sin) + Math.abs(dimensions.y * angle.cos);
+        start = new Vector2d(center.x - gradientLineLength * angle.cos / 2, center.y + gradientLineLength * angle.sin / 2);
+        end = new Vector2d(center.x + gradientLineLength * angle.cos / 2, center.y - gradientLineLength * angle.sin / 2);
     };
 
     this.getGradient = function(canvasCtx) {
-        var bgGradient = canvasCtx.createLinearGradient(this.start.x, this.start.y, this.end.x, this.end.y);
-        bgGradient.addColorStop(0.0, this.gradientStartColor);
-        bgGradient.addColorStop(1.0, this.gradientEndColor);
+        var bgGradient = canvasCtx.createLinearGradient(start.x, start.y, end.x, end.y);
+        bgGradient.addColorStop(0.0, gradientStartColor);
+        bgGradient.addColorStop(1.0, gradientEndColor);
         return bgGradient;
     }
 }
@@ -62,11 +88,6 @@ function resizeCanvas(canvases, visContainer, gradientCalculator) {
     });
 
     gradientCalculator.setGradient(getCenter(canvases[0]), new Vector2d(visContainer.clientWidth, visContainer.clientHeight));
-}
-
-function setupStream(url, audioPlayer) {
-    url = new URL(url + '?client_id=' + clientId);
-    audioPlayer.setAttribute('src', url);
 }
 
 function drawTimeDomainVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
@@ -93,12 +114,12 @@ function drawTimeDomainVisualizationCore(clockWise, canvas, canvasCtx, timeData)
     canvasCtx.stroke();
 }
 
-function drawTimeDomainVisualization(canvas, audioAnalyser) {
+function drawTimeDomainVisualization(canvas, audioHub) {
     requestAnimationFrame(function() {
-        drawTimeDomainVisualization(canvas, audioAnalyser);
+        drawTimeDomainVisualization(canvas, audioHub);
     });
 
-    if (audioPlayer.paused) {
+    if (audioHub.paused()) {
         return;
     }
 
@@ -107,7 +128,7 @@ function drawTimeDomainVisualization(canvas, audioAnalyser) {
     var canvasCtx = canvas.getContext("2d");
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-    var timeData = audioAnalyser.getTimeData();
+    var timeData = audioHub.getAudioAnalyser().getTimeData();
     drawTimeDomainVisualizationCore(true, canvas, canvasCtx, timeData);
     drawTimeDomainVisualizationCore(false, canvas, canvasCtx, timeData);
 }
@@ -168,7 +189,7 @@ function drawPerspective(canvasCtx, center, innerRadius, outerRadius, startingAn
     canvasCtx.stroke();
 }
 
-function drawBarGradient(gradient, magnitude) {
+function addBarGradientColorStops(gradient, magnitude) {
     gradient.addColorStop(0.0, 'rgba(0,0,' + 198 + ',0.02)');
 
     var maxMidAlpha = 0.5;
@@ -188,29 +209,29 @@ function drawBarGradient(gradient, magnitude) {
     }
 }
 
-function drawCircularVisualization(canvas, audioAnalyser, gradientCalculator) {
+function radiusMultiplier(frequencyData) {
+    var rMultiplier = 0;
+    for (i = 0; i < frequencyData.length / 4; i++) {
+        rMultiplier += frequencyData[i];
+    }
+    return rMultiplier / (frequencyData.length / 4) / 255;
+}
+
+function drawCircularVisualization(canvas, audioHub, gradientCalculator) {
     drawCircularVisual = requestAnimationFrame(function() {
-        drawCircularVisualization(canvas, audioAnalyser, gradientCalculator);
+        drawCircularVisualization(canvas, audioHub, gradientCalculator);
     });
 
-    if (audioPlayer.paused) {
+    if (audioHub.paused()) {
         return;
     }
 
-    //canvas.style.webkitFilter = "blur(1px)";
     var canvasCtx = canvas.getContext("2d");
 
-
-    var frequencyData = audioAnalyser.getFrequencyData();
+    var frequencyData = audioHub.getAudioAnalyser().getFrequencyData();
     var frequencyBufferLength = frequencyData.length;
 
-    var radiusMultiplier = 0;
-    for (i = 0; i < frequencyBufferLength / 4; i++) {
-        radiusMultiplier += frequencyData[i];
-    }
-    radiusMultiplier = radiusMultiplier / (frequencyBufferLength / 4) / 255;
-
-    var radius = radiusMultiplier * (canvas.height / 4);
+    var radius = radiusMultiplier(frequencyData) * (canvas.height / 4);
     var angularIncrement = 2 * Math.PI / frequencyBufferLength;
 
     var center = getCenter(canvas);
@@ -242,12 +263,10 @@ function drawCircularVisualization(canvas, audioAnalyser, gradientCalculator) {
         canvasCtx.arc(center.x, center.y, outerRadius, endingAngle.angle, startingAngle.angle, true);
         canvasCtx.lineTo(center.x + startingAngle.cos * radius, center.y + startingAngle.sin * radius);
 
-        var midAngle = angularIncrement * (i + 0.5);
-        var cosMidAngle = Math.cos(midAngle);
-        var sinMidAngle = Math.sin(midAngle);
+        var midAngle = new Angle(angularIncrement * (i + 0.5));
 
-        var gradient = canvasCtx.createLinearGradient(center.x + cosMidAngle * radius, center.y + sinMidAngle * radius, center.x + cosMidAngle * outerRadius, center.y + sinMidAngle * outerRadius);
-        drawBarGradient(gradient, barHeight / 255);
+        var gradient = canvasCtx.createLinearGradient(center.x + midAngle.cos * radius, center.y + midAngle.sin * radius, center.x + midAngle.cos * outerRadius, center.y + midAngle.sin * outerRadius);
+        addBarGradientColorStops(gradient, barHeight / 255);
         canvasCtx.fillStyle = gradient;
         canvasCtx.fill();
 
@@ -257,12 +276,12 @@ function drawCircularVisualization(canvas, audioAnalyser, gradientCalculator) {
     drawBarsPerspectiveLazy(canvasCtx, center, radius, maxRadius, gradientCalculator);
 }
 
-function streamTrack(url, audioPlayer) {
+function streamTrack(url, audioHub) {
     console.log(url);
     var resolveIdentfierURL = 'https://api.soundcloud.com/resolve.json?url=' + url + '&client_id=' + clientId;
     $.getJSON(resolveIdentfierURL, function(resolved) {
         console.log(resolved);
-        setupStream(resolved.stream_url, audioPlayer);
+        audioHub.streamTrack(resolved.stream_url);
     });
 }
 
@@ -307,29 +326,18 @@ $(function () {
         resizeCanvas(canvases, visContainer[0], gradientCalculator);
     });
 
-    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var audioHub = new AudioHub($('#audioPlayer'));
 
-    var gainNode = audioCtx.createGain();
-    gainNode.connect(audioCtx.destination);
-    gainNode.gain.value = 0.5;
-
-    var audioPlayer = document.getElementById('audioPlayer');
-    var mediaSource = audioCtx.createMediaElementSource(audioPlayer);
-
-    var audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 128, 4096);
-
-    mediaSource.connect(gainNode);
-
-    drawCircularVisualization(canvases[0], audioAnalyser, gradientCalculator);
-    drawTimeDomainVisualization(canvases[1], audioAnalyser);
+    drawCircularVisualization(canvases[0], audioHub, gradientCalculator);
+    drawTimeDomainVisualization(canvases[1], audioHub);
 
     var urlInputBar = document.getElementById('urlInputBar');
     $("#streamSubmit").click(function() {
-        streamTrack(urlInputBar.value, audioPlayer);
+        streamTrack(urlInputBar.value, audioHub);
     });
 
     if (urlVars['trackURL'] !== undefined) {
         urlInputBar.value = urlVars['trackURL'];
-        streamTrack(urlInputBar.value, audioPlayer);
+        streamTrack(urlInputBar.value, audioHub);
     }
 });
