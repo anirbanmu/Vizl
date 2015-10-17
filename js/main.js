@@ -26,7 +26,7 @@ function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     };
 }
 
-function AudioHub(audioPlayer) {
+function AudioHub(audioPlayer, playControls, progressBar, trackInfo) {
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     var gainNode = audioCtx.createGain();
@@ -37,6 +37,7 @@ function AudioHub(audioPlayer) {
     mediaSource.connect(gainNode);
 
     var audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 128, 4096);
+    var audioControls = new AudioControls(audioPlayer, playControls, progressBar, trackInfo);
 
     this.getAudioAnalyser = function() {
         return audioAnalyser;
@@ -46,8 +47,10 @@ function AudioHub(audioPlayer) {
         return audioPlayer[0].paused;
     };
 
-    this.streamTrack = function(url) {
-        url = new URL(url + '?client_id=' + clientId);
+    this.streamTrack = function(trackInfo) {
+        audioControls.updateTrack(trackInfo.title);
+
+        url = new URL(trackInfo.stream_url + '?client_id=' + clientId);
         audioPlayer[0].setAttribute('src', url);
     };
 }
@@ -284,7 +287,7 @@ function streamTrack(url, audioHub) {
     var resolveIdentfierURL = 'https://api.soundcloud.com/resolve.json?url=' + url + '&client_id=' + clientId;
     $.getJSON(resolveIdentfierURL, function(resolved) {
         console.log(resolved);
-        audioHub.streamTrack(resolved.stream_url);
+        audioHub.streamTrack(resolved);
     });
 }
 
@@ -329,7 +332,7 @@ $(function () {
         resizeCanvas(canvases, visContainer[0], gradientCalculator);
     });
 
-    var audioHub = new AudioHub($('#audioPlayer'));
+    var audioHub = new AudioHub($('#audioPlayer'), $('#playControls'), $('#bar'), $('#trackInfo'));
 
     drawCircularVisualization(canvases[0], audioHub, gradientCalculator);
     drawTimeDomainVisualization(canvases[1], audioHub);
