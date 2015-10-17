@@ -2,23 +2,27 @@ function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     var frequencyAnalyser = context.createAnalyser();
     frequencyAnalyser.fftSize = frequencyFftSize;
     frequencyAnalyser.smoothingTimeConstant = 0.89;
-    frequencyData = new Uint8Array(frequencyAnalyser.frequencyBinCount);
     source.connect(frequencyAnalyser);
 
     var timeAnalyser = context.createAnalyser();
     timeAnalyser.fftSize = timeFftSize;
     timeAnalyser.smoothingTimeConstant = 1;
-    timeData = new Uint8Array(timeAnalyser.frequencyBinCount);
     source.connect(timeAnalyser);
 
+    var frequencyData = new Uint8Array(frequencyAnalyser.frequencyBinCount);
     this.getFrequencyData = function() {
         frequencyAnalyser.getByteFrequencyData(frequencyData);
-        return frequencyData.slice();
+        return frequencyData;
     };
 
-    this.getTimeData = function() {
+    var timeData = new Uint8Array(timeAnalyser.frequencyBinCount);
+    var timeDataWeighted = new Uint8Array(timeAnalyser.frequencyBinCount);
+    this.getTimeData = function(weight) {
         timeAnalyser.getByteTimeDomainData(timeData);
-        return timeData.slice();
+        for (i = 0; i < timeData.length; ++i) {
+            timeDataWeighted[i] = timeDataWeighted[i] * weight + timeData[i] * (1 - weight);
+        }
+        return timeDataWeighted;
     };
 }
 
@@ -128,7 +132,7 @@ function drawTimeDomainVisualization(canvas, audioHub) {
     var canvasCtx = canvas.getContext("2d");
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-    var timeData = audioHub.getAudioAnalyser().getTimeData();
+    var timeData = audioHub.getAudioAnalyser().getTimeData(0.65);
     drawTimeDomainVisualizationCore(true, canvas, canvasCtx, timeData);
     drawTimeDomainVisualizationCore(false, canvas, canvasCtx, timeData);
 }
