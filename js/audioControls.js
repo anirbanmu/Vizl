@@ -6,12 +6,14 @@ function playPauseToggle(audioPlayer){
     audioPlayer.pause();
 }
 
-function played(playControls) {
+function played(playControls, trackInfo, track) {
     playControls.className = 'i fontawesome-pause';
+    trackInfo.textContent = track;
 }
 
-function paused(playControls) {
+function paused(playControls, trackInfo) {
     playControls.className = 'i fontawesome-play';
+    trackInfo.textContent = 'Paused';
 }
 
 function updateProgress(audioPlayer, bar) {
@@ -19,24 +21,25 @@ function updateProgress(audioPlayer, bar) {
     bar.style.width = progress + '%';
 }
 
-$(function () {
-    var playControls = $('#playControls');
-    var audioPlayer = $('#audioPlayer');
-
+function AudioControls(audioPlayer, playControls, progressBar, trackInfo) {
     playControls.click(function() {
         playPauseToggle(audioPlayer[0]);
     });
 
+    var track = '';
     audioPlayer.bind('play', function() {
-        played(playControls[0]);
+        played(playControls[0], trackInfo[0], track);
     });
 
     audioPlayer.bind('pause', function() {
-        paused(playControls[0]);
+        paused(playControls[0], trackInfo[0]);
     });
 
-    var progressBar = document.getElementById('bar');
     audioPlayer.bind('timeupdate', function() {
-        updateProgress(audioPlayer[0], progressBar);
+        updateProgress(audioPlayer[0], progressBar[0]);
     });
-});
+
+    this.updateTrack = function(newTrack) {
+        track = newTrack;
+    };
+}
