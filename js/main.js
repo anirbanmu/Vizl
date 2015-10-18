@@ -157,7 +157,7 @@ function drawPerspective(canvasCtx, center, innerRadius, outerRadius, startingAn
 // Draw a gradient bar (radially) from angles[0] to angle[1] based on the magnitude
 function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segmentCount) {
     if (magnitude === 0) {
-        return;
+        return 0;
     }
 
     // Not including segmented gaps
@@ -187,6 +187,9 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
 
         lastOuterRadius = outerRadius + (lineWidths[0] + lineWidthIncrement * i);
     }
+
+    // Report max possible length
+    return lineWidthAddedLength + radii[1];
 }
 
 function radiusMultiplier(frequencyData) {
@@ -221,23 +224,24 @@ function drawCircularVisualization(canvas, audioHub, gradientCalculator) {
 
     var maxRadius = radius + canvas.height * 0.6 / 2;
 
+    // Path for all segmented bars
+    canvasCtx.beginPath();
+
+    var maxPossibleLength = maxRadius;
+    for (i = 0; i < frequencyBufferLength; i++) {
+        var angleOffset = angularIncrement * 0.05;
+        var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
+
+        maxPossibleLength = Math.max(maxPossibleLength, drawSegmentedBarPath(canvasCtx, center, angles, [radius, maxRadius], frequencyData[i] / 255, 32));
+    }
+
     // Gradient for segmented bars
-    var gradient = canvasCtx.createRadialGradient(center.x, center.y, radius, center.x, center.y, maxRadius);
+    var gradient = canvasCtx.createRadialGradient(center.x, center.y, radius, center.x, center.y, maxPossibleLength);
     gradient.addColorStop(0.0, 'rgba(0,0,198,0.02)');
     gradient.addColorStop(0.5, 'rgba(0,198,0,0.5)');
     gradient.addColorStop(1.0, 'rgba(198,0,0,1.0)');
 
     canvasCtx.fillStyle = gradient;
-
-    // Path for all segmented bars
-    canvasCtx.beginPath();
-
-    for (i = 0; i < frequencyBufferLength; i++) {
-        var angleOffset = angularIncrement * 0.05;
-        var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
-
-        drawSegmentedBarPath(canvasCtx, center, angles, [radius, maxRadius], frequencyData[i] / 255, 32);
-    }
 
     // Fill for all bars
     canvasCtx.fill();
