@@ -55,46 +55,15 @@ function AudioHub(audioPlayer, playControls, progressBar, trackInfo) {
     };
 }
 
-function GradientCalculator(angle, gradientStartColor, gradientEndColor) {
-    var angle = new Angle(angle * Math.PI / 180);
-    var gradientStartColor = gradientStartColor;
-    var gradientEndColor = gradientEndColor;
-
-    var start = new Vector2d(0, 0);
-    var end = new Vector2d(0, 0);
-    var size = new Vector2d(0, 0);
-
-    this.setGradient = function(center, dimensions) {
-        if (dimensions === size) {
-            return;
-        }
-
-        size = dimensions;
-
-        var gradientLineLength = Math.abs(dimensions.x * angle.sin) + Math.abs(dimensions.y * angle.cos);
-        start = new Vector2d(center.x - gradientLineLength * angle.cos / 2, center.y + gradientLineLength * angle.sin / 2);
-        end = new Vector2d(center.x + gradientLineLength * angle.cos / 2, center.y - gradientLineLength * angle.sin / 2);
-    };
-
-    this.getGradient = function(canvasCtx) {
-        var bgGradient = canvasCtx.createLinearGradient(start.x, start.y, end.x, end.y);
-        bgGradient.addColorStop(0.0, gradientStartColor);
-        bgGradient.addColorStop(1.0, gradientEndColor);
-        return bgGradient;
-    }
-}
-
 function getCenter(canvas) {
     return new Vector2d(canvas.width / 2, canvas.height / 2);
 }
 
-function resizeCanvas(canvases, visContainer, gradientCalculator) {
+function resizeCanvas(canvases, visContainer) {
     canvases.forEach(function(canvas) {
         canvas.width = visContainer.clientWidth;
         canvas.height = visContainer.clientHeight;
     });
-
-    gradientCalculator.setGradient(getCenter(canvases[0]), new Vector2d(visContainer.clientWidth, visContainer.clientHeight));
 }
 
 function drawTimeDomainVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
@@ -140,36 +109,29 @@ function drawTimeDomainVisualization(canvas, audioHub) {
     drawTimeDomainVisualizationCore(false, canvas, canvasCtx, timeData);
 }
 
-function drawPerspective(canvasCtx, center, innerRadius, outerRadius, startingAngle, endingAngle, gradientCalculator) {
-    canvasCtx.moveTo(center.x + Math.cos(startingAngle) * innerRadius, center.y + Math.sin(startingAngle) * innerRadius);
-    canvasCtx.lineTo(center.x + Math.cos(startingAngle) * outerRadius, center.y + Math.sin(startingAngle) * outerRadius);
-    canvasCtx.arc(center.x, center.y, outerRadius, startingAngle, (endingAngle - startingAngle) * 0.1 + startingAngle, false);
-    canvasCtx.closePath();
+function lineWidthIncrement(lineWidths, segmentCount) {
+    return (lineWidths[1] - lineWidths[0]) / segmentCount;
+}
 
-    canvasCtx.moveTo(center.x + Math.cos(endingAngle) * innerRadius, center.y + Math.sin(endingAngle) * innerRadius);
-    canvasCtx.lineTo(center.x + Math.cos(endingAngle) * outerRadius, center.y + Math.sin(endingAngle) * outerRadius);
-    canvasCtx.arc(center.x, center.y, outerRadius, endingAngle, endingAngle - (endingAngle - startingAngle) * 0.1, true);
-    canvasCtx.closePath();
+function segmentGapAdditionalLength(lineWidths, segmentCount) {
+    return segmentCount * lineWidths[0] + segmentCount * (segmentCount - 1) * lineWidthIncrement(lineWidths, segmentCount) / 2;
 }
 
 // radii[0] = minRadius
 // radii[1] = maxRadius
 // Draw a gradient bar (radially) from angles[0] to angle[1] based on the magnitude
-function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segmentCount) {
+function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segmentCount, lineWidths) {
     if (magnitude === 0) {
-        return 0;
+        return;
     }
 
     // Not including segmented gaps
     var maxLength = radii[1] - radii[0];
 
-    var radialIncrement = 0.3 * maxLength / segmentCount;
+    var radialIncrement = 0.05 * maxLength / segmentCount;
     var radialMultiplier = 2 * (maxLength - segmentCount * radialIncrement) / (segmentCount * (segmentCount - 1));
 
-    // Line width range
-    var lineWidths = [2, 5];
-    var lineWidthIncrement = (lineWidths[1] - lineWidths[0]) / segmentCount;
-    var lineWidthAddedLength = segmentCount * lineWidths[0] + segmentCount * (segmentCount - 1) * lineWidthIncrement / 2;
+    var lineWidthInc = lineWidthIncrement(lineWidths, segmentCount);
 
     // Current bar's actual length
     var lastSegmentMagnitude = magnitude * segmentCount - Math.floor(magnitude * segmentCount);
@@ -185,11 +147,8 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
         canvasCtx.arc(center.x, center.y, outerRadius, angles[1].angle, angles[0].angle, true);
         canvasCtx.closePath();
 
-        lastOuterRadius = outerRadius + (lineWidths[0] + lineWidthIncrement * i);
+        lastOuterRadius = outerRadius + (lineWidths[0] + lineWidthInc * i);
     }
-
-    // Report max possible length
-    return lineWidthAddedLength + radii[1];
 }
 
 function radiusMultiplier(frequencyData) {
@@ -200,9 +159,9 @@ function radiusMultiplier(frequencyData) {
     return rMultiplier / (frequencyData.length / 4) / 255;
 }
 
-function drawCircularVisualization(canvas, audioHub, gradientCalculator) {
+function drawCircularVisualization(canvas, audioHub) {
     drawCircularVisual = requestAnimationFrame(function() {
-        drawCircularVisualization(canvas, audioHub, gradientCalculator);
+        drawCircularVisualization(canvas, audioHub);
     });
 
     if (audioHub.paused()) {
@@ -214,7 +173,9 @@ function drawCircularVisualization(canvas, audioHub, gradientCalculator) {
     var frequencyData = audioHub.getAudioAnalyser().getFrequencyData();
     var frequencyBufferLength = frequencyData.length;
 
-    var radius = radiusMultiplier(frequencyData) * (canvas.height / 4);
+    var scalingDim = Math.min(canvas.width / 2, canvas.height / 2);
+
+    var radius = radiusMultiplier(frequencyData) * (scalingDim / 2);
     var angularIncrement = 2 * Math.PI / frequencyBufferLength;
 
     var center = getCenter(canvas);
@@ -222,53 +183,32 @@ function drawCircularVisualization(canvas, audioHub, gradientCalculator) {
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     canvasCtx.lineJoin = 'miter';
 
-    var maxRadius = radius + canvas.height * 0.6 / 2;
-
     // Path for all segmented bars
     canvasCtx.beginPath();
 
-    var maxPossibleLength = maxRadius;
-    for (i = 0; i < frequencyBufferLength; i++) {
-        var angleOffset = angularIncrement * 0.05;
-        var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
+    // Variation range for gaps in segmented bars
+    var lineWidths = [2, 8];
 
-        maxPossibleLength = Math.max(maxPossibleLength, drawSegmentedBarPath(canvasCtx, center, angles, [radius, maxRadius], frequencyData[i] / 255, 32));
-    }
+    var segmentCount = 26;
+
+    var maxRadius = radius + scalingDim * 6 / 16;
 
     // Gradient for segmented bars
-    var gradient = canvasCtx.createRadialGradient(center.x, center.y, radius, center.x, center.y, maxPossibleLength);
+    var gradient = canvasCtx.createRadialGradient(center.x, center.y, radius, center.x, center.y, segmentGapAdditionalLength(lineWidths, segmentCount) + maxRadius);
     gradient.addColorStop(0.0, 'rgba(0,0,198,0.02)');
     gradient.addColorStop(0.5, 'rgba(0,198,0,0.5)');
     gradient.addColorStop(1.0, 'rgba(198,0,0,1.0)');
-
     canvasCtx.fillStyle = gradient;
+
+    for (i = 0; i < frequencyBufferLength; i++) {
+        var angleOffset = angularIncrement * 0.1;
+        var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
+
+        drawSegmentedBarPath(canvasCtx, center, angles, [radius, maxRadius], frequencyData[i] / 255, segmentCount, lineWidths);
+    }
 
     // Fill for all bars
     canvasCtx.fill();
-
-    // TODO: Fix perspective
-    return;
-
-    var bgGradient = gradientCalculator.getGradient(canvasCtx);
-
-    canvasCtx.fillStyle = bgGradient;
-    canvasCtx.strokeStyle = bgGradient;
-    canvasCtx.lineWidth = 3;
-
-    canvasCtx.beginPath();
-
-    for (i = 0; i < frequencyBufferLength; i++) {
-        var angleOffset = angularIncrement * 0.05;
-        var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
-
-        var magnitude = frequencyData[i] / 255;
-        var radii = [radius, radius + (magnitude * (canvas.height * 0.6 / 2))];
-
-        drawPerspective(canvasCtx, center, radii[0], radii[1], angles[0].angle, angles[1].angle, gradientCalculator);
-    }
-
-    canvasCtx.fill();
-    canvasCtx.stroke();
 }
 
 function streamTrack(url, audioHub) {
@@ -278,12 +218,6 @@ function streamTrack(url, audioHub) {
         console.log(resolved);
         audioHub.streamTrack(resolved);
     });
-}
-
-// Get linear gradient properties from given style
-function getBackgroundGradient(style) {
-    var re = /linear-gradient\(\s*(\d+)deg\s*,\s*(rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\))\s*,\s*(rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\))\s*\)/;
-    return re.exec(style);
 }
 
 // Gets all URL variables
@@ -308,22 +242,17 @@ function insertVisualizationCanvases(visContainer, layerCount) {
 $(function () {
     var urlVars = getUrlVars();
 
-    var backgroundStyle = window.getComputedStyle(document.body, null).getPropertyValue('background');
-    var matched = getBackgroundGradient(backgroundStyle);
-
-    var gradientCalculator = new GradientCalculator(matched[1], matched[2], matched[3]);
-
     var visContainer = $('#visContainer');
     var canvases = insertVisualizationCanvases(visContainer, 2);
 
-    resizeCanvas(canvases, visContainer[0], gradientCalculator);
+    resizeCanvas(canvases, visContainer[0]);
     $(window).bind('resize', function() {
-        resizeCanvas(canvases, visContainer[0], gradientCalculator);
+        resizeCanvas(canvases, visContainer[0]);
     });
 
     var audioHub = new AudioHub($('#audioPlayer'), $('#playControls'), $('#bar'), $('#trackInfo'));
 
-    drawCircularVisualization(canvases[0], audioHub, gradientCalculator);
+    drawCircularVisualization(canvases[0], audioHub);
     drawTimeDomainVisualization(canvases[1], audioHub);
 
     var urlInputBar = document.getElementById('urlInputBar');
