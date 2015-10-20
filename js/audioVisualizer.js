@@ -1,3 +1,5 @@
+'use strict';
+
 function getCenter(canvas) {
     return new Vector2d(canvas.width / 2, canvas.height / 2);
 }
@@ -80,7 +82,7 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
 
 function radiusMultiplier(frequencyData) {
     var rMultiplier = 0;
-    for (i = 0; i < frequencyData.length / 4; i++) {
+    for (var i = 0; i < frequencyData.length / 4; i++) {
         rMultiplier += frequencyData[i];
     }
     return rMultiplier / (frequencyData.length / 4) / 255;
@@ -119,7 +121,7 @@ function drawFrequencyVisualization(canvas, audioAnalyser) {
     gradient.addColorStop(1.0, 'rgba(198,0,0,1.0)');
     canvasCtx.fillStyle = gradient;
 
-    for (i = 0; i < frequencyBufferLength; i++) {
+    for (var i = 0; i < frequencyBufferLength; i++) {
         var angleOffset = angularIncrement * 0.1;
         var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
 
@@ -132,7 +134,7 @@ function drawFrequencyVisualization(canvas, audioAnalyser) {
 
 function insertVisualizationCanvases(visContainer, layerCount) {
     var canvases = [];
-    for (i = 0; i < layerCount; ++i) {
+    for (var i = 0; i < layerCount; ++i) {
         var newCanvas = $("<canvas style='z-index: " + i + "; position: absolute; left: 0; top: 0;'></canvas>");
         visContainer.append(newCanvas);
         canvases[i] = newCanvas[0];
@@ -143,7 +145,6 @@ function insertVisualizationCanvases(visContainer, layerCount) {
 function AudioVisualizer(audioAnalyser, visContainer) {
     var canvases = insertVisualizationCanvases(visContainer, 2);
     var visualizationPaused = true;
-    var self = this;
 
     function timeVisRepeater() {
         if (visualizationPaused) {
@@ -170,10 +171,6 @@ function AudioVisualizer(audioAnalyser, visContainer) {
 
     this.pauseVisualization = function() {
         visualizationPaused = true;
-    };
-
-    this.paused = function() {
-        return visualizationPaused;
     };
 
     this.onResize = function() {
