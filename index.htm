@@ -16,35 +16,36 @@
 
   <body>
 
-<div id='container'>
-  <div id='topbar'>
-    <div id='logo'>Logo</div>
-    <ul id='menu'>
-      
-      <div id='progressBar'>
-        <div id='bar'></div>
+    <div id='container'>
+      <div id='topbar'>
+        <div id='logo'>Logo</div>
+        <ul id='menu'>
+
+          <div id='progressBar'>
+            <div id='bar'></div>
+          </div>
+          <li id='trackInfo'></li>
+          <li id='playControls' class='fontawesome-play i'></li>
+          <li class='fontawesome-cog i'></li>
+        </ul>
       </div>
-      <li id='trackInfo'></li>
-      <li id='playControls' class='fontawesome-play i'></li>
-      <li class='fontawesome-cog i'></li>
-    </ul>
-  </div>
-  <div id='feed'>
-    <div id="options" class='card'>
-      
+      <div id='feed'>
+        <div id="options" class='card'>
+
+        </div>
+        <div class='card'>
+          <input class='i' id='urlInputBar'>
+          <button class='i' id='streamSubmit'>Submit</button>
+        </div>
+      </div>
     </div>
-    <div class='card'>
-      <input class='i' id='urlInputBar'>
-      <button class='i' id='streamSubmit'>Submit</button>
-    </div>
-  </div>
-</div>
 
 
-	<div id='visContainer' style='height: 100vh;'></div>
+    <div id='visContainer' style='height: 100vh;'></div>
 
-  <script src="js/audioControls.js"></script>
-  <script src='js/main.js'></script>
+    <script src="js/audioControls.js"></script>
+    <script src="js/audioVisualizer.js"></script>
+    <script src='js/main.js'></script>
 
   </body>
 </html>
