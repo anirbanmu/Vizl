@@ -1,3 +1,5 @@
+'use strict';
+
 function AudioControls(audioPlayer, playControls, progressBar, trackInfo) {
     var track = '';
     this.updateTrack = function(newTrack) {

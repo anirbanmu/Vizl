@@ -1,3 +1,5 @@
+'use strict';
+
 function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     var frequencyAnalyser = context.createAnalyser();
     frequencyAnalyser.fftSize = frequencyFftSize;
@@ -19,7 +21,7 @@ function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     var timeDataWeighted = new Uint8Array(timeAnalyser.frequencyBinCount);
     this.getTimeData = function(weight) {
         timeAnalyser.getByteTimeDomainData(timeData);
-        for (i = 0; i < timeData.length; ++i) {
+        for (var i = 0; i < timeData.length; ++i) {
             timeDataWeighted[i] = timeDataWeighted[i] * weight + timeData[i] * (1 - weight);
         }
         return timeDataWeighted;
@@ -40,18 +42,10 @@ function AudioHub(audioPlayer, playControls, progressBar, trackInfo, visContaine
     var audioControls = new AudioControls(audioPlayer, playControls, progressBar, trackInfo);
     var audioVisualizer = new AudioVisualizer(audioAnalyser, visContainer);
 
-    this.getAudioAnalyser = function() {
-        return audioAnalyser;
-    };
-
-    this.paused = function() {
-        return audioPlayer[0].paused;
-    };
-
     this.streamTrack = function(trackInfo) {
         audioControls.updateTrack(trackInfo.title);
 
-        url = new URL(trackInfo.stream_url + '?client_id=' + clientId);
+        var url = new URL(trackInfo.stream_url + '?client_id=' + clientId);
         audioPlayer[0].setAttribute('src', url);
     };
 
