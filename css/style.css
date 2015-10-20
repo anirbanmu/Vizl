@@ -127,13 +127,16 @@ canvas {
   left: 0;
   margin: 0;
   padding: 0;
-  
+
   transiiton: all 500ms;
 }
+
 #options {
   min-height: 4em;
   visibility: hidden;
-  display: none;}
+  display: none;
+}
+
 #progressBar {
   width: 24%;
   height: 1.24em;
@@ -141,7 +144,9 @@ canvas {
   border-width: 0.1em;
   display: flex;
 }
+
 #bar {
   margin: 0.12em;
   background: #e74c3c;
-  transition: all 60ms;}
+  transition: all 60ms;
+}
