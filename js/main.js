@@ -44,6 +44,7 @@ function AudioHub(audioPlayer, playControls, progressBar, trackInfo, visContaine
 
     this.streamTrack = function(trackInfo) {
         audioControls.updateTrack(trackInfo.title);
+        audioVisualizer.updateTrackImage(trackInfo.artwork_url);
 
         var url = new URL(trackInfo.stream_url + '?client_id=' + clientId);
         audioPlayer[0].setAttribute('src', url);

@@ -132,6 +132,13 @@ function drawFrequencyVisualization(canvas, audioAnalyser) {
     canvasCtx.fill();
 }
 
+function drawTrackImage(canvas, image) {
+    var ctx = canvas.getContext("2d");
+    canvas.style.opacity = 0.1;
+    canvas.style.webkitFilter = "blur(30px)";
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+}
+
 function insertVisualizationCanvases(visContainer, layerCount) {
     var canvases = [];
     for (var i = 0; i < layerCount; ++i) {
@@ -143,30 +150,35 @@ function insertVisualizationCanvases(visContainer, layerCount) {
 }
 
 function AudioVisualizer(audioAnalyser, visContainer) {
-    var canvases = insertVisualizationCanvases(visContainer, 2);
     var visualizationPaused = true;
+    var trackImage = new Image();
+    trackImage.onload = function() {
+        drawTrackImage(canvases[0], trackImage);
+    };
 
-    function timeVisRepeater() {
-        if (visualizationPaused) {
-            return;
-        }
-        requestAnimationFrame(timeVisRepeater);
-        drawTimeVisualization(canvases[0], audioAnalyser);
-    }
+    var canvases = insertVisualizationCanvases(visContainer, 3);
 
-    function freqVisRepeater() {
-        if (visualizationPaused) {
-            return;
-        }
-        requestAnimationFrame(freqVisRepeater);
-        drawFrequencyVisualization(canvases[1], audioAnalyser);
+    // Non continuously updated canvases require re-render on resize
+    canvases[0].redraw = drawTrackImage.bind(null, canvases[0], trackImage);
+
+    this.updateTrackImage = function(trackImgURL) {
+        trackImage.src = trackImgURL;
+    };
+
+    function repeatUntilPaused(func) {
+        (function customRepeater() {
+            if (!visualizationPaused) {
+                requestAnimationFrame(customRepeater);
+                func();
+            }
+        }());
     };
 
     this.startVisualization = function() {
         visualizationPaused = false;
 
-        timeVisRepeater();
-        freqVisRepeater();
+        repeatUntilPaused(drawTimeVisualization.bind(null, canvases[1], audioAnalyser));
+        repeatUntilPaused(drawFrequencyVisualization.bind(null, canvases[2], audioAnalyser));
     };
 
     this.pauseVisualization = function() {
@@ -177,6 +189,9 @@ function AudioVisualizer(audioAnalyser, visContainer) {
         canvases.forEach(function(canvas) {
             canvas.width = visContainer[0].clientWidth;
             canvas.height = visContainer[0].clientHeight;
+            if (canvas.redraw) {
+                canvas.redraw();
+            }
         });
     };
 
