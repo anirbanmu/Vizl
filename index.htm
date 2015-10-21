@@ -3,12 +3,15 @@
   <head>
     <meta charset="UTF-8">
     <title>Vizl</title>
-    <link href='https://fonts.googleapis.com/css?family=Fugaz+One' rel='stylesheet' type='text/css'>
 
     <script src='http://code.jquery.com/jquery-2.1.4.min.js'></script>
     <script src='js/util.js'></script>
     <script src='js/config.js'></script>
+    <script src="js/audioControls.js"></script>
+    <script src="js/audioVisualizer.js"></script>
+    <script src='js/main.js'></script>
 
+    <link href='https://fonts.googleapis.com/css?family=Fugaz+One' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/style.css">
 
 	<audio id="audioPlayer" crossorigin="anonymous" preload autobuffer autoplay></audio>
@@ -18,7 +21,7 @@
 
     <div id='container'>
       <div id='topbar'>
-        <div id='logo'>Logo</div>
+        <div id='logo'>Vizl</div>
         <ul id='menu'>
 
           <div id='progressBar'>
@@ -42,10 +45,5 @@
 
 
     <div id='visContainer' style='height: 100vh;'></div>
-
-    <script src="js/audioControls.js"></script>
-    <script src="js/audioVisualizer.js"></script>
-    <script src='js/main.js'></script>
-
   </body>
 </html>
