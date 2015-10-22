@@ -31,13 +31,15 @@ function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
 function AudioHub(playControls, progressBar, trackInfo, visContainer) {
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    var audioPlayer = $('<audio crossorigin="anonymous" autoplay></audio>');
+    var audioPlayer = new Audio();
+    audioPlayer.crossOrigin = 'anonymous';
+    audioPlayer.autoplay = true;
 
     var gainNode = audioCtx.createGain();
     gainNode.connect(audioCtx.destination);
     gainNode.gain.value = 0.5;
 
-    var mediaSource = audioCtx.createMediaElementSource(audioPlayer[0]);
+    var mediaSource = audioCtx.createMediaElementSource(audioPlayer);
     mediaSource.connect(gainNode);
 
     var audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 128, 4096);
@@ -53,22 +55,22 @@ function AudioHub(playControls, progressBar, trackInfo, visContainer) {
         audioControls.playPauseToggle();
     });
 
-    audioPlayer.bind('play', function() {
+    audioPlayer.addEventListener('play', function() {
         audioControls.onPlay();
         audioVisualizer.startVisualization();
     });
 
-    audioPlayer.bind('pause', function() {
+    audioPlayer.addEventListener('pause', function() {
         audioControls.onPause();
         audioVisualizer.pauseVisualization();
     });
 
-    audioPlayer.bind('timeupdate', function() {
+    audioPlayer.addEventListener('timeupdate', function() {
         audioControls.onTimeUpdate();
     });
 
     progressBar.click(function(e) {
-        var position = Math.max(0, Math.min(e.offsetX / progressBar.width(), 1));
+        var position = Math.max(0, Math.min((e.pageX - progressBar.offset().left) / progressBar.width(), 1));
         audioControls.seekTo(position);
     });
 

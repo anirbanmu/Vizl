@@ -3,19 +3,19 @@
 function AudioControls(audioPlayer, playControls, progressBar, trackInfo) {
     var track = '';
     this.updateTrack = function(newSrcURL, newTrackTitle) {
-        audioPlayer[0].src = newSrcURL;
+        audioPlayer.src = newSrcURL;
         track = newTrackTitle;
     };
 
-    var innerProgressBar = $("<div id='bar'></div>");
+    var innerProgressBar = $("<div id='bar' />");
     progressBar.append(innerProgressBar);
 
     this.playPauseToggle = function() {
-        if (audioPlayer[0].paused) {
-            audioPlayer[0].play();
+        if (audioPlayer.paused) {
+            audioPlayer.play();
             return;
         }
-        audioPlayer[0].pause();
+        audioPlayer.pause();
     };
 
     this.onPause = function() {
@@ -29,14 +29,14 @@ function AudioControls(audioPlayer, playControls, progressBar, trackInfo) {
     };
 
     this.onTimeUpdate = function() {
-        var progress = 100 * audioPlayer[0].currentTime / audioPlayer[0].duration;
+        var progress = 100 * audioPlayer.currentTime / audioPlayer.duration;
         innerProgressBar[0].style.width = progress + '%';
     };
 
     this.seekTo = function(normalizedPosition) {
-        if (audioPlayer[0].src) {
-            var newTime = audioPlayer[0].duration * normalizedPosition;
-            audioPlayer[0].currentTime = newTime;
+        if (audioPlayer.src) {
+            var newTime = audioPlayer.duration * normalizedPosition;
+            audioPlayer.currentTime = newTime;
         }
     };
 }

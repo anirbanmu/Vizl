@@ -1,5 +1,9 @@
 'use strict';
 
+function setFilter(element, filter) {
+    element.style.webkitFilter = element.style.filter = filter;
+}
+
 function getCenter(canvas) {
     return new Vector2d(canvas.width / 2, canvas.height / 2);
 }
@@ -28,9 +32,9 @@ function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
 }
 
 function drawTimeVisualization(canvas, audioAnalyser) {
-    canvas.style.webkitFilter = "blur(1px)";
+    setFilter(canvas, 'blur(1px)');
 
-    var canvasCtx = canvas.getContext("2d");
+    var canvasCtx = canvas.getContext('2d');
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
     var timeData = audioAnalyser.getTimeData(0.65);
@@ -89,7 +93,7 @@ function radiusMultiplier(frequencyData) {
 }
 
 function drawFrequencyVisualization(canvas, audioAnalyser) {
-    var canvasCtx = canvas.getContext("2d");
+    var canvasCtx = canvas.getContext('2d');
 
     var frequencyData = audioAnalyser.getFrequencyData();
     var frequencyBufferLength = frequencyData.length;
@@ -133,16 +137,16 @@ function drawFrequencyVisualization(canvas, audioAnalyser) {
 }
 
 function drawTrackImage(canvas, image) {
-    var ctx = canvas.getContext("2d");
+    var ctx = canvas.getContext('2d');
     canvas.style.opacity = 0.1;
-    canvas.style.webkitFilter = "blur(30px)";
+    setFilter(canvas, 'blur(30px)');
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 }
 
 function insertVisualizationCanvases(visContainer, layerCount) {
     var canvases = [];
     for (var i = 0; i < layerCount; ++i) {
-        var newCanvas = $("<canvas style='z-index: " + i + "; position: absolute; left: 0; top: 0;'></canvas>");
+        var newCanvas = $("<canvas style='z-index: " + i + "; position: absolute; left: 0; top: 0;' />");
         visContainer.append(newCanvas);
         canvases[i] = newCanvas[0];
     }
@@ -150,18 +154,17 @@ function insertVisualizationCanvases(visContainer, layerCount) {
 }
 
 function AudioVisualizer(audioAnalyser, visContainer) {
+    var canvases = insertVisualizationCanvases(visContainer, 3);
+
     var visualizationPaused = true;
     var trackImage = new Image();
     trackImage.onload = function() {
         drawTrackImage(canvases[0], trackImage);
+        canvases[0].redraw = drawTrackImage.bind(null, canvases[0], trackImage);
     };
 
-    var canvases = insertVisualizationCanvases(visContainer, 3);
-
-    // Non continuously updated canvases require re-render on resize
-    canvases[0].redraw = drawTrackImage.bind(null, canvases[0], trackImage);
-
     this.updateTrackImage = function(trackImgURL) {
+        canvases[0].redraw = null;
         trackImage.src = trackImgURL;
     };
 
