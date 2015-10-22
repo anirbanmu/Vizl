@@ -28,8 +28,10 @@ function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     };
 }
 
-function AudioHub(audioPlayer, playControls, progressBar, trackInfo, visContainer) {
+function AudioHub(playControls, progressBar, trackInfo, visContainer) {
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    var audioPlayer = $('<audio crossorigin="anonymous" autoplay></audio>');
 
     var gainNode = audioCtx.createGain();
     gainNode.connect(audioCtx.destination);
@@ -96,7 +98,7 @@ function getUrlVars() {
 $(function () {
     var urlVars = getUrlVars();
 
-    var audioHub = new AudioHub($('#audioPlayer'), $('#playControls'), $('#progressBar'), $('#trackInfo'), $('#visContainer'));
+    var audioHub = new AudioHub($('#playControls'), $('#progressBar'), $('#trackInfo'), $('#visContainer'));
 
     var urlInputBar = document.getElementById('urlInputBar');
     $("#streamSubmit").click(function() {
