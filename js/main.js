@@ -43,11 +43,8 @@ function AudioHub(audioPlayer, playControls, progressBar, trackInfo, visContaine
     var audioVisualizer = new AudioVisualizer(audioAnalyser, visContainer);
 
     this.streamTrack = function(trackInfo) {
-        audioControls.updateTrack(trackInfo.title);
+        audioControls.updateTrack(new URL(trackInfo.stream_url + '?client_id=' + clientId), trackInfo.title);
         audioVisualizer.updateTrackImage(trackInfo.artwork_url);
-
-        var url = new URL(trackInfo.stream_url + '?client_id=' + clientId);
-        audioPlayer[0].setAttribute('src', url);
     };
 
     playControls.click(function() {
@@ -66,6 +63,11 @@ function AudioHub(audioPlayer, playControls, progressBar, trackInfo, visContaine
 
     audioPlayer.bind('timeupdate', function() {
         audioControls.onTimeUpdate();
+    });
+
+    progressBar.click(function(e) {
+        var position = Math.max(0, Math.min(e.offsetX / progressBar.width(), 1));
+        audioControls.seekTo(position);
     });
 
     $(window).bind('resize', function() {
@@ -94,7 +96,7 @@ function getUrlVars() {
 $(function () {
     var urlVars = getUrlVars();
 
-    var audioHub = new AudioHub($('#audioPlayer'), $('#playControls'), $('#bar'), $('#trackInfo'), $('#visContainer'));
+    var audioHub = new AudioHub($('#audioPlayer'), $('#playControls'), $('#progressBar'), $('#trackInfo'), $('#visContainer'));
 
     var urlInputBar = document.getElementById('urlInputBar');
     $("#streamSubmit").click(function() {

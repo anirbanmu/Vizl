@@ -2,9 +2,13 @@
 
 function AudioControls(audioPlayer, playControls, progressBar, trackInfo) {
     var track = '';
-    this.updateTrack = function(newTrack) {
-        track = newTrack;
+    this.updateTrack = function(newSrcURL, newTrackTitle) {
+        audioPlayer[0].src = newSrcURL;
+        track = newTrackTitle;
     };
+
+    var innerProgressBar = $("<div id='bar'></div>");
+    progressBar.append(innerProgressBar);
 
     this.playPauseToggle = function() {
         if (audioPlayer[0].paused) {
@@ -26,6 +30,13 @@ function AudioControls(audioPlayer, playControls, progressBar, trackInfo) {
 
     this.onTimeUpdate = function() {
         var progress = 100 * audioPlayer[0].currentTime / audioPlayer[0].duration;
-        progressBar[0].style.width = progress + '%';
+        innerProgressBar[0].style.width = progress + '%';
+    };
+
+    this.seekTo = function(normalizedPosition) {
+        if (audioPlayer[0].src) {
+            var newTime = audioPlayer[0].duration * normalizedPosition;
+            audioPlayer[0].currentTime = newTime;
+        }
     };
 }
