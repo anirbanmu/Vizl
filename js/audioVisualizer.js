@@ -24,18 +24,15 @@ function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
         canvasCtx.lineTo(center.x + radius * angle.cos + timeData[i] * angle.cos * 0.75, center.y + radius * angle.sin + timeData[i] * angle.sin * 0.75);
     }
 
-    canvasCtx.lineWidth = 1;
-    canvasCtx.lineJoin = 'round';
-    canvasCtx.strokeStyle = 'rgb(231, 76, 60)';
-
     canvasCtx.stroke();
 }
 
 function drawTimeVisualization(canvas, audioAnalyser) {
-    setFilter(canvas, 'blur(1px)');
-
     var canvasCtx = canvas.getContext('2d');
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    canvasCtx.lineWidth = 1;
+    canvasCtx.lineJoin = 'round';
+    canvasCtx.strokeStyle = 'rgb(231, 76, 60)';
 
     var timeData = audioAnalyser.getTimeData(0.65);
     drawTimeVisualizationCore(true, canvas, canvasCtx, timeData);
@@ -84,7 +81,7 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
     }
 }
 
-function radiusMultiplier(frequencyData) {
+function freqIntensityMultipler(frequencyData) {
     var rMultiplier = 0;
     for (var i = 0; i < frequencyData.length / 4; i++) {
         rMultiplier += frequencyData[i];
@@ -92,21 +89,20 @@ function radiusMultiplier(frequencyData) {
     return rMultiplier / (frequencyData.length / 4) / 255;
 }
 
-function drawFrequencyVisualization(canvas, audioAnalyser) {
+function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) {
     var canvasCtx = canvas.getContext('2d');
 
-    var frequencyData = audioAnalyser.getFrequencyData();
     var frequencyBufferLength = frequencyData.length;
 
     var scalingDim = Math.min(canvas.width / 2, canvas.height / 2);
 
-    var radius = radiusMultiplier(frequencyData) * (scalingDim / 2);
+    var radius = freqIntensityFactor * (scalingDim / 2);
     var angularIncrement = 2 * Math.PI / frequencyBufferLength;
 
     var center = getCenter(canvas);
 
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-    canvasCtx.lineJoin = 'miter';
+    //canvasCtx.lineJoin = 'miter';
 
     // Path for all segmented bars
     canvasCtx.beginPath();
@@ -120,8 +116,8 @@ function drawFrequencyVisualization(canvas, audioAnalyser) {
 
     // Gradient for segmented bars
     var gradient = canvasCtx.createRadialGradient(center.x, center.y, radius, center.x, center.y, segmentGapAdditionalLength(lineWidths, segmentCount) + maxRadius);
-    gradient.addColorStop(0.0, 'rgba(0,0,198,0.02)');
-    gradient.addColorStop(0.5, 'rgba(0,198,0,0.5)');
+    gradient.addColorStop(0.0, 'rgba(0,0,255,0.02)');
+    gradient.addColorStop(0.5, 'rgba(0,255,0,0.5)');
     gradient.addColorStop(1.0, 'rgba(198,0,0,1.0)');
     canvasCtx.fillStyle = gradient;
 
@@ -138,23 +134,61 @@ function drawFrequencyVisualization(canvas, audioAnalyser) {
 
 function drawTrackImage(canvas, image) {
     var ctx = canvas.getContext('2d');
-    canvas.style.opacity = 0.1;
-    setFilter(canvas, 'blur(30px)');
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    var minDim = Math.min(canvas.width, canvas.height);
+
+    ctx.save();
+
+    // Always center square image with half tiles (flipped) to fill the rest.
+    if (canvas.width > minDim) {
+        var x = canvas.width / 2 - minDim / 2;
+        ctx.drawImage(image, x, 0, minDim, minDim);
+        ctx.scale(-1,1);
+        ctx.drawImage(image, -x, 0, minDim, minDim);
+        ctx.drawImage(image, -(x + minDim + minDim), 0, minDim, minDim);
+    }
+    else {
+        var y = canvas.height / 2 - minDim / 2;
+        ctx.drawImage(image, 0, y, minDim, minDim);
+        ctx.scale(1,-1);
+        ctx.drawImage(image, 0, -y, minDim, minDim);
+        ctx.drawImage(image, 0, -(y + minDim + minDim), minDim, minDim);
+    }
+
+    ctx.restore();
 }
 
-function insertVisualizationCanvases(visContainer, layerCount) {
+function scaleInRange(scale, range) {
+    return (range[1] - range[0]) * scale + range[0];
+}
+
+function modifyTrackImage(canvas, frequencyData, freqIntensityFactor) {
+    setFilter(canvas, 'hue-rotate(' + scaleInRange(freqIntensityFactor, [0, 360]) + 'deg) blur(30px)');
+}
+
+function frequencyBasedVisualizations(canvases, frequencyData, freqIntensityFactor) {
+    modifyTrackImage(canvases[0], frequencyData, freqIntensityFactor);
+    drawFrequencyVisualization(canvases[1], frequencyData, freqIntensityFactor);
+}
+
+function insertVisualizationCanvases(visContainer, opacities, filters, layerCount) {
     var canvases = [];
     for (var i = 0; i < layerCount; ++i) {
         var newCanvas = $("<canvas style='z-index: " + i + "; position: absolute; left: 0; top: 0;' />");
         visContainer.append(newCanvas);
         canvases[i] = newCanvas[0];
+        canvases[i].style.opacity = opacities[i];
+        setFilter(canvases[i], filters[i]);
     }
     return canvases;
 }
 
 function AudioVisualizer(audioAnalyser, visContainer) {
-    var canvases = insertVisualizationCanvases(visContainer, 3);
+    var canvases;
+    {
+        var opacities = [0.06, 1.0, 1.0];
+        var filters = ['blur(30px)', 'blur(1px)', ''];
+        canvases = insertVisualizationCanvases(visContainer, opacities, filters, 3);
+    }
 
     var visualizationPaused = true;
     var trackImage = new Image();
@@ -181,7 +215,9 @@ function AudioVisualizer(audioAnalyser, visContainer) {
         visualizationPaused = false;
 
         repeatUntilPaused(drawTimeVisualization.bind(null, canvases[1], audioAnalyser));
-        repeatUntilPaused(drawFrequencyVisualization.bind(null, canvases[2], audioAnalyser));
+        repeatUntilPaused(function() {
+            frequencyBasedVisualizations([canvases[0], canvases[2]], audioAnalyser.getFrequencyData(), freqIntensityMultipler(audioAnalyser.getFrequencyData()));
+        });
     };
 
     this.pauseVisualization = function() {

@@ -48,7 +48,9 @@ function AudioHub(playControls, progressBar, trackInfo, visContainer) {
 
     this.streamTrack = function(trackInfo) {
         audioControls.updateTrack(new URL(trackInfo.stream_url + '?client_id=' + clientId), trackInfo.title);
-        audioVisualizer.updateTrackImage(trackInfo.artwork_url);
+        if (trackInfo.artwork_url) {
+            audioVisualizer.updateTrackImage(trackInfo.artwork_url.replace('-large', '-t500x500')); // Use highest size image
+        }
     };
 
     playControls.click(function() {
