@@ -20,8 +20,9 @@ function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
 
     for (var i = 1; i < timeData.length; i++) {
         var angle = new Angle(angularIncrement * i);
+        var magnitude = radius + timeData[i] * 0.75;
 
-        canvasCtx.lineTo(center.x + radius * angle.cos + timeData[i] * angle.cos * 0.75, center.y + radius * angle.sin + timeData[i] * angle.sin * 0.75);
+        canvasCtx.lineTo(center.x + magnitude * angle.cos, center.y + magnitude * angle.sin);
     }
 
     canvasCtx.stroke();
@@ -118,7 +119,7 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) 
     var gradient = canvasCtx.createRadialGradient(center.x, center.y, radius, center.x, center.y, segmentGapAdditionalLength(lineWidths, segmentCount) + maxRadius);
     gradient.addColorStop(0.0, 'rgba(0,0,255,0.02)');
     gradient.addColorStop(0.5, 'rgba(0,255,0,0.5)');
-    gradient.addColorStop(1.0, 'rgba(198,0,0,1.0)');
+    gradient.addColorStop(1.0, 'rgba(255,0,0,1.0)');
     canvasCtx.fillStyle = gradient;
 
     for (var i = 0; i < frequencyBufferLength; i++) {
@@ -192,6 +193,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
 
     var visualizationPaused = true;
     var trackImage = new Image();
+    trackImage.crossOrigin = 'anonymous';
     trackImage.onload = function() {
         drawTrackImage(canvases[0], trackImage);
         canvases[0].redraw = drawTrackImage.bind(null, canvases[0], trackImage);
