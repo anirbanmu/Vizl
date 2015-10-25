@@ -34,21 +34,29 @@ function Playlist() {
         return tracks[currentIndex++];
     };
 
+    this.prev = function() {
+        if (currentIndex == 1) {
+            return null;
+        }
+        --currentIndex;
+        return tracks[currentIndex - 1];
+    };
+
     this.ended = function() {
         return currentIndex === tracks.length;
     }
 }
 
-function AudioPlayer(audioElement, playControls, progressBar, trackInfo) {
+function AudioPlayer(audioElement, playPause, progressBar, trackInfoDisplay) {
     var trackTitle = '';
+
+    var innerProgressBar = $("<div id='bar' />");
+    progressBar.append(innerProgressBar);
 
     this.playTrack = function(track, clientId) {
         audioElement.src = new URL(track.url + '?client_id=' + clientId);
         trackTitle = track.title;
     };
-
-    var innerProgressBar = $("<div id='bar' />");
-    progressBar.append(innerProgressBar);
 
     this.playPauseToggle = function() {
         if (audioElement.paused) {
@@ -59,13 +67,13 @@ function AudioPlayer(audioElement, playControls, progressBar, trackInfo) {
     };
 
     this.onPause = function() {
-        playControls[0].className = 'i fontawesome-play';
-        trackInfo[0].textContent = 'Paused';
+        playPause.className = 'i fontawesome-play';
+        trackInfoDisplay.textContent = 'Paused';
     };
 
     this.onPlay = function() {
-        playControls[0].className = 'i fontawesome-pause';
-        trackInfo[0].textContent = trackTitle;
+        playPause.className = 'i fontawesome-pause';
+        trackInfoDisplay.textContent = trackTitle;
     };
 
     this.onTimeUpdate = function() {
