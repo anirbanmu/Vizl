@@ -62,10 +62,7 @@ function AudioHub(playPause, nextButton, prevButton, progressBar, trackInfoDispl
 
     audioElement.addEventListener('ended', function() {
         audioPlayer.onEnd();
-        var next = playlist.next();
-        if (next) {
-            play(next);
-        }
+        play(playlist.next());
     });
 
     progressBar.click(function(e) {
