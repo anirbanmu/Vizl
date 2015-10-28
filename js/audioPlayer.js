@@ -89,10 +89,10 @@ function AudioPlayer(audioElement, playPause, progressBar, trackInfoDisplay) {
     };
 
     this.onEnd = function() {
-        audioElement.src = '';
+        audioElement.removeAttribute('src');
     };
 
     this.trackInProgress = function() {
-        return audioElement.src !== '';
+        return audioElement.src;
     };
 }
