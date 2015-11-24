@@ -16,10 +16,10 @@ function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
     var angularIncrement = (clockWise ? 1 : -1) * 2 * Math.PI / timeData.length;
 
     canvasCtx.beginPath();
-    canvasCtx.moveTo(center.x + radius + timeData[0] * 0.75, center.y);
+    canvasCtx.moveTo(center.x + (radius + timeData[0] * 0.75), center.y);
 
     for (var i = 1; i < timeData.length; i++) {
-        var angle = new Angle(angularIncrement * i);
+        var angle = new Angle(+ angularIncrement * i);
         var magnitude = radius + timeData[i] * 0.75;
 
         canvasCtx.lineTo(center.x + magnitude * angle.cos, center.y + magnitude * angle.sin);
@@ -74,8 +74,8 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
         var outerRadius = (i + 1 === barSegmentCount) ? (innerRadius + (radialIncrement + radialMultiplier * i) * lastSegmentMagnitude) : (innerRadius + (radialIncrement + radialMultiplier * i));
 
         canvasCtx.moveTo(center.x + innerRadius * angles[0].cos, center.y + innerRadius * angles[0].sin);
-        canvasCtx.arc(center.x, center.y, innerRadius, angles[0].angle, angles[1].angle, false);
-        canvasCtx.arc(center.x, center.y, outerRadius, angles[1].angle, angles[0].angle, true);
+        canvasCtx.arc(center.x, center.y, innerRadius, angles[0].angle, angles[1].angle, angles[0].angle > angles[1].angle);
+        canvasCtx.arc(center.x, center.y, outerRadius, angles[1].angle, angles[0].angle, angles[0].angle < angles[1].angle);
         canvasCtx.closePath();
 
         lastOuterRadius = outerRadius + (lineWidths[0] + lineWidthInc * i);
@@ -117,7 +117,7 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) 
     gradient.addColorStop(1.0, 'rgba(255,0,0,1.0)');
     canvasCtx.fillStyle = gradient;
 
-    var angleOffset = angularIncrement * 0.15;
+    var angleOffset = angularIncrement * 0.1;
     for (var i = 0; i < frequencyCutOff; i++) {
         var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
 
