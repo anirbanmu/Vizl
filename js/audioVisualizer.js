@@ -94,7 +94,7 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) 
     var canvasCtx = canvas.getContext('2d');
     var scalingDim = Math.min(canvas.width / 2, canvas.height / 2);
     var radius = freqIntensityFactor * (scalingDim / 2);
-    var frequencyCutOff = 0.74 * frequencyData.length;
+    var frequencyCutOff = Math.floor(0.74 * frequencyData.length);
     var angularOffsetFactor = 0.15
     var angularIncrement = 2 * Math.PI / frequencyCutOff;
     var center = getCenter(canvas);
@@ -117,8 +117,8 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) 
     gradient.addColorStop(1.0, 'rgba(255,0,0,1.0)');
     canvasCtx.fillStyle = gradient;
 
+    var angleOffset = angularIncrement * 0.15;
     for (var i = 0; i < frequencyCutOff; i++) {
-        var angleOffset = angularIncrement * 0.15;
         var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
 
         drawSegmentedBarPath(canvasCtx, center, angles, [radius, maxRadius], frequencyData[i] / 255, segmentCount, lineWidths);
