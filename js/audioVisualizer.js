@@ -16,7 +16,7 @@ function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
     var angularIncrement = (clockWise ? 1 : -1) * 2 * Math.PI / timeData.length;
 
     canvasCtx.beginPath();
-    canvasCtx.moveTo(center.x + radius + timeData[0] * 0.75, center.y);
+    canvasCtx.moveTo(center.x + (radius + timeData[0] * 0.75), center.y);
 
     for (var i = 1; i < timeData.length; i++) {
         var angle = new Angle(angularIncrement * i);
@@ -69,17 +69,24 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
     var barSegmentCount = Math.ceil(magnitude * segmentCount);
 
     var lastOuterRadius = radii[0];
-    for (var i = 0; i < barSegmentCount; ++i) {
+    var i;
+    for (i = 0; i < barSegmentCount - 1; ++i) {
         var innerRadius = lastOuterRadius;
-        var outerRadius = (i + 1 === barSegmentCount) ? (innerRadius + (radialIncrement + radialMultiplier * i) * lastSegmentMagnitude) : (innerRadius + (radialIncrement + radialMultiplier * i));
+        var outerRadius = innerRadius + (radialIncrement + radialMultiplier * i);
 
         canvasCtx.moveTo(center.x + innerRadius * angles[0].cos, center.y + innerRadius * angles[0].sin);
-        canvasCtx.arc(center.x, center.y, innerRadius, angles[0].angle, angles[1].angle, false);
-        canvasCtx.arc(center.x, center.y, outerRadius, angles[1].angle, angles[0].angle, true);
+        canvasCtx.arc(center.x, center.y, innerRadius, angles[0].angle, angles[1].angle, angles[0].angle > angles[1].angle);
+        canvasCtx.arc(center.x, center.y, outerRadius, angles[1].angle, angles[0].angle, angles[0].angle < angles[1].angle);
         canvasCtx.closePath();
 
         lastOuterRadius = outerRadius + (lineWidths[0] + lineWidthInc * i);
     }
+
+    var outerRadius = (lastOuterRadius + (radialIncrement + radialMultiplier * i) * lastSegmentMagnitude);
+    canvasCtx.moveTo(center.x + lastOuterRadius * angles[0].cos, center.y + lastOuterRadius * angles[0].sin);
+    canvasCtx.arc(center.x, center.y, lastOuterRadius, angles[0].angle, angles[1].angle, angles[0].angle > angles[1].angle);
+    canvasCtx.arc(center.x, center.y, outerRadius, angles[1].angle, angles[0].angle, angles[0].angle < angles[1].angle);
+    canvasCtx.closePath();
 }
 
 function freqIntensityMultipler(frequencyData) {
@@ -92,14 +99,11 @@ function freqIntensityMultipler(frequencyData) {
 
 function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) {
     var canvasCtx = canvas.getContext('2d');
-
-    var frequencyBufferLength = frequencyData.length;
-
     var scalingDim = Math.min(canvas.width / 2, canvas.height / 2);
-
     var radius = freqIntensityFactor * (scalingDim / 2);
-    var angularIncrement = 2 * Math.PI / frequencyBufferLength;
-
+    var frequencyCutOff = Math.floor(0.74 * frequencyData.length);
+    var angularOffsetFactor = 0.15
+    var angularIncrement = 2 * Math.PI / frequencyCutOff;
     var center = getCenter(canvas);
 
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
@@ -110,9 +114,7 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) 
 
     // Variation range for gaps in segmented bars
     var lineWidths = [2, 8];
-
     var segmentCount = 26;
-
     var maxRadius = radius + scalingDim * 6 / 16;
 
     // Gradient for segmented bars
@@ -122,8 +124,8 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) 
     gradient.addColorStop(1.0, 'rgba(255,0,0,1.0)');
     canvasCtx.fillStyle = gradient;
 
-    for (var i = 0; i < frequencyBufferLength; i++) {
-        var angleOffset = angularIncrement * 0.1;
+    var angleOffset = angularIncrement * 0.1;
+    for (var i = 0; i < frequencyCutOff; i++) {
         var angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
 
         drawSegmentedBarPath(canvasCtx, center, angles, [radius, maxRadius], frequencyData[i] / 255, segmentCount, lineWidths);
