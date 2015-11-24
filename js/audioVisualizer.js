@@ -19,7 +19,7 @@ function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
     canvasCtx.moveTo(center.x + (radius + timeData[0] * 0.75), center.y);
 
     for (var i = 1; i < timeData.length; i++) {
-        var angle = new Angle(+ angularIncrement * i);
+        var angle = new Angle(angularIncrement * i);
         var magnitude = radius + timeData[i] * 0.75;
 
         canvasCtx.lineTo(center.x + magnitude * angle.cos, center.y + magnitude * angle.sin);
@@ -69,9 +69,10 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
     var barSegmentCount = Math.ceil(magnitude * segmentCount);
 
     var lastOuterRadius = radii[0];
-    for (var i = 0; i < barSegmentCount; ++i) {
+    var i;
+    for (i = 0; i < barSegmentCount - 1; ++i) {
         var innerRadius = lastOuterRadius;
-        var outerRadius = (i + 1 === barSegmentCount) ? (innerRadius + (radialIncrement + radialMultiplier * i) * lastSegmentMagnitude) : (innerRadius + (radialIncrement + radialMultiplier * i));
+        var outerRadius = innerRadius + (radialIncrement + radialMultiplier * i);
 
         canvasCtx.moveTo(center.x + innerRadius * angles[0].cos, center.y + innerRadius * angles[0].sin);
         canvasCtx.arc(center.x, center.y, innerRadius, angles[0].angle, angles[1].angle, angles[0].angle > angles[1].angle);
@@ -80,6 +81,12 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
 
         lastOuterRadius = outerRadius + (lineWidths[0] + lineWidthInc * i);
     }
+
+    var outerRadius = (lastOuterRadius + (radialIncrement + radialMultiplier * i) * lastSegmentMagnitude);
+    canvasCtx.moveTo(center.x + lastOuterRadius * angles[0].cos, center.y + lastOuterRadius * angles[0].sin);
+    canvasCtx.arc(center.x, center.y, lastOuterRadius, angles[0].angle, angles[1].angle, angles[0].angle > angles[1].angle);
+    canvasCtx.arc(center.x, center.y, outerRadius, angles[1].angle, angles[0].angle, angles[0].angle < angles[1].angle);
+    canvasCtx.closePath();
 }
 
 function freqIntensityMultipler(frequencyData) {
