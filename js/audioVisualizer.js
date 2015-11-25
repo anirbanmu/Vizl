@@ -1,17 +1,13 @@
 'use strict';
 
 function setFilter(element, filter) {
-    element.style.webkitFilter = element.style.filter = filter;
-}
-
-function getCenter(canvas) {
-    return new Vector2d(canvas.width / 2, canvas.height / 2);
+    element.canvas.style.webkitFilter = element.canvas.style.filter = filter;
 }
 
 function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
     let radius = (Math.min(canvas.width, canvas.height) / 7) - 128.0;
 
-    let center = getCenter(canvas);
+    let center = canvas.center();
 
     let angularIncrement = (clockWise ? 1 : -1) * 2 * Math.PI / timeData.length;
 
@@ -103,7 +99,7 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) 
     let frequencyCutOff = Math.floor(0.74 * frequencyData.length);
     let angularOffsetFactor = 0.15
     let angularIncrement = 2 * Math.PI / frequencyCutOff;
-    let center = getCenter(canvas);
+    let center = canvas.center();
 
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     //canvasCtx.lineJoin = 'miter';
@@ -172,13 +168,53 @@ function frequencyBasedVisualizations(canvases, frequencyData, freqIntensityFact
     drawFrequencyVisualization(canvases[1], frequencyData, freqIntensityFactor);
 }
 
+class CanvasHelper {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.context2d = canvas.getContext('2d');
+        this.contextgl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        this.redraw = null;
+        this.initWebGL();
+    }
+
+    initWebGL() {
+        let gl = this.contextgl
+        if (gl) {
+            gl.clearColor(0.0, 0.0, 0.0, 0.0); // Transparent
+            gl.enable(gl.DEPTH_TEST);
+            gl.depthFunc(gl.LEQUAL);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        }
+    }
+
+    get width() {
+        return this.canvas.width;
+    }
+
+    set width(w) {
+        this.canvas.width = w;
+    }
+
+    get height() {
+        return this.canvas.height;
+    }
+
+    set height(h) {
+        this.canvas.height = h;
+    }
+
+    center() {
+        return new Vector2d(this.canvas.width / 2, this.canvas.height / 2);
+    }
+}
+
 function insertVisualizationCanvases(visContainer, opacities, filters, layerCount) {
     let canvases = [];
     for (let i = 0; i < layerCount; ++i) {
         let newCanvas = $("<canvas style='z-index: " + i + "; position: absolute; left: 0; top: 0;' />");
         visContainer.append(newCanvas);
-        canvases[i] = newCanvas[0];
-        canvases[i].style.opacity = opacities[i];
+        canvases[i] = new CanvasHelper(newCanvas[0]);
+        canvases[i].canvas.style.opacity = opacities[i];
         setFilter(canvases[i], filters[i]);
     }
     return canvases;
@@ -190,11 +226,6 @@ function AudioVisualizer(audioAnalyser, visContainer) {
         let opacities = [0.06, 1.0, 1.0];
         let filters = ['blur(30px)', 'blur(1px)', ''];
         canvases = insertVisualizationCanvases(visContainer, opacities, filters, 3);
-    }
-
-    for (let canvas of canvases) {
-        canvas.context2d = canvas.getContext('2d')
-        canvas.contextgl = canvas.getContext('webgl')
     }
 
     let visualizationPaused = true;
