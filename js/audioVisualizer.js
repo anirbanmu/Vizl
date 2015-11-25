@@ -169,21 +169,27 @@ function frequencyBasedVisualizations(canvases, frequencyData, freqIntensityFact
 }
 
 class CanvasHelper {
-    constructor(canvas) {
+    constructor(canvas, gl) {
         this.canvas = canvas;
-        this.context2d = canvas.getContext('2d');
-        this.contextgl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        this.contextgl = gl ? (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) : null;
+        this.context2d = gl ? null : canvas.getContext('2d');
         this.redraw = null;
         this.initWebGL();
     }
 
     initWebGL() {
-        let gl = this.contextgl
+        let gl = this.contextgl;
         if (gl) {
             gl.clearColor(0.0, 0.0, 0.0, 0.0); // Transparent
             gl.enable(gl.DEPTH_TEST);
             gl.depthFunc(gl.LEQUAL);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        }
+    }
+
+    resized() {
+        if (this.contextgl) {
+            this.contextgl.viewport(0, 0, this.width, this.height);
         }
     }
 
@@ -208,12 +214,12 @@ class CanvasHelper {
     }
 }
 
-function insertVisualizationCanvases(visContainer, opacities, filters, layerCount) {
+function insertVisualizationCanvases(visContainer, opacities, filters, contextTypes, layerCount) {
     let canvases = [];
     for (let i = 0; i < layerCount; ++i) {
         let newCanvas = $("<canvas style='z-index: " + i + "; position: absolute; left: 0; top: 0;' />");
         visContainer.append(newCanvas);
-        canvases[i] = new CanvasHelper(newCanvas[0]);
+        canvases[i] = new CanvasHelper(newCanvas[0], contextTypes[i]);
         canvases[i].canvas.style.opacity = opacities[i];
         setFilter(canvases[i], filters[i]);
     }
@@ -225,7 +231,8 @@ function AudioVisualizer(audioAnalyser, visContainer) {
     {
         let opacities = [0.06, 1.0, 1.0];
         let filters = ['blur(30px)', 'blur(1px)', ''];
-        canvases = insertVisualizationCanvases(visContainer, opacities, filters, 3);
+        let types = [false, false, false]
+        canvases = insertVisualizationCanvases(visContainer, opacities, filters, types, 3);
     }
 
     let visualizationPaused = true;
@@ -267,6 +274,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
         canvases.forEach(function(canvas) {
             canvas.width = visContainer[0].clientWidth;
             canvas.height = visContainer[0].clientHeight;
+            canvas.resized();
             if (canvas.redraw) {
                 canvas.redraw();
             }
