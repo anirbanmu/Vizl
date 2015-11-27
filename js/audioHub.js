@@ -14,7 +14,7 @@ function AudioHub(playPause, nextButton, prevButton, progressBar, trackInfoDispl
     var mediaSource = audioCtx.createMediaElementSource(audioElement);
     mediaSource.connect(gainNode);
 
-    var audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 128, 4096);
+    var audioAnalyser = new AudioAnalyser(audioCtx, mediaSource, 256, 4096);
     var playlist = new Playlist();
     var audioPlayer = new AudioPlayer(audioElement, playPause[0], progressBar, trackInfoDisplay[0]);
     var audioVisualizer = new AudioVisualizer(audioAnalyser, visContainer);

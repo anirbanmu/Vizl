@@ -11,21 +11,30 @@ function AudioAnalyser(context, source, frequencyFftSize, timeFftSize) {
     timeAnalyser.smoothingTimeConstant = 1;
     source.connect(timeAnalyser);
 
-    var frequencyData = new Uint8Array(frequencyAnalyser.frequencyBinCount);
+    var frequencyByteData = new Uint8Array(frequencyAnalyser.frequencyBinCount);
     this.getFrequencyData = function() {
-        frequencyAnalyser.getByteFrequencyData(frequencyData);
-        return frequencyData;
+        frequencyAnalyser.getByteFrequencyData(frequencyByteData);
+        return frequencyByteData;
     };
 
-    var timeData = new Uint8Array(timeAnalyser.frequencyBinCount);
-    var timeDataWeighted = new Uint8Array(timeAnalyser.frequencyBinCount);
+    let frequencyFloatData = new Float32Array(frequencyAnalyser.frequencyBinCount);
+    this.getFloatFrequencyData = function() {
+        frequencyAnalyser.getFloatFrequencyData(frequencyFloatData);
+        return frequencyFloatData;
+    };
+
+    var timeData = new Float32Array(timeAnalyser.fftSize);
+    var timeDataWeighted = new Float32Array(timeAnalyser.fftSize);
     this.getTimeData = function(weight) {
-        timeAnalyser.getByteTimeDomainData(timeData);
+        timeAnalyser.getFloatTimeDomainData(timeData);
         for (var i = 0; i < timeData.length; ++i) {
             timeDataWeighted[i] = timeDataWeighted[i] * weight + timeData[i] * (1 - weight);
         }
         return timeDataWeighted;
     };
+
+    this.timeFftSize = function() { return timeAnalyser.fftSize; };
+    this.freqBinCount = function() { return frequencyAnalyser.frequencyBinCount; };
 }
 
 function addStreamingItem(url, audioHub) {

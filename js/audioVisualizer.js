@@ -5,17 +5,18 @@ function setFilter(element, filter) {
 }
 
 function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
-    let radius = (Math.min(canvas.width, canvas.height) / 7) - 128.0;
+    let radius = Math.min(canvas.width, canvas.height) / 7;
+    let scalingFactor = radius / 2;
 
     let center = canvas.center();
-
     let angularIncrement = (clockWise ? 1 : -1) * 2 * Math.PI / timeData.length;
 
     canvasCtx.beginPath();
-    canvasCtx.moveTo(center.x + (radius + timeData[0] * 0.75), center.y);
+    canvasCtx.moveTo(center.x + (radius + timeData[0] * scalingFactor), center.y);
 
-    for (let i = 1; i < timeData.length; i++) {let angle = new Angle(angularIncrement * i);
-        let magnitude = radius + timeData[i] * 0.75;
+    for (let i = 1; i < timeData.length; i++) {
+        let angle = new Angle(angularIncrement * i);
+        let magnitude = radius + timeData[i] * scalingFactor;
 
         canvasCtx.lineTo(center.x + magnitude * angle.cos, center.y + magnitude * angle.sin);
     }
@@ -169,12 +170,16 @@ function frequencyBasedVisualizations(canvases, frequencyData, freqIntensityFact
 }
 
 class CanvasHelper {
-    constructor(canvas, gl) {
+    constructor(canvas, gl, init) {
         this.canvas = canvas;
         this.contextgl = gl ? (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) : null;
         this.context2d = gl ? null : canvas.getContext('2d');
         this.redraw = null;
+        this.render = null;
         this.initWebGL();
+
+        // Meant for user of this class to store their shader program's attrib & uniform locations.
+        this.glLocations = {};
     }
 
     initWebGL() {
@@ -187,7 +192,9 @@ class CanvasHelper {
         }
     }
 
-    resized() {
+    resize(w, h) {
+        this.width = w;
+        this.height = h;
         if (this.contextgl) {
             this.contextgl.viewport(0, 0, this.width, this.height);
         }
@@ -231,9 +238,11 @@ function AudioVisualizer(audioAnalyser, visContainer) {
     {
         let opacities = [0.06, 1.0, 1.0];
         let filters = ['blur(30px)', 'blur(1px)', ''];
-        let types = [false, false, false]
+        let types = [false, true, false];
         canvases = insertVisualizationCanvases(visContainer, opacities, filters, types, 3);
     }
+
+    initTimeDomainVisualizationGL(canvases[1], audioAnalyser.timeFftSize());
 
     let visualizationPaused = true;
     let trackImage = new Image();
@@ -260,9 +269,10 @@ function AudioVisualizer(audioAnalyser, visContainer) {
     this.startVisualization = function() {
         visualizationPaused = false;
 
-        repeatUntilPaused(drawTimeVisualization.bind(null, canvases[1], audioAnalyser));
+        repeatUntilPaused(drawTimeDomainVisualizationGL.bind(null, canvases[1], audioAnalyser));
         repeatUntilPaused(function() {
-            frequencyBasedVisualizations([canvases[0], canvases[2]], audioAnalyser.getFrequencyData(), freqIntensityMultipler(audioAnalyser.getFrequencyData()));
+            const frequencyData = audioAnalyser.getFrequencyData();
+            frequencyBasedVisualizations([canvases[0], canvases[2]], frequencyData, freqIntensityMultipler(frequencyData));
         });
     };
 
@@ -272,9 +282,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
 
     this.onResize = function() {
         canvases.forEach(function(canvas) {
-            canvas.width = visContainer[0].clientWidth;
-            canvas.height = visContainer[0].clientHeight;
-            canvas.resized();
+            canvas.resize(visContainer[0].clientWidth, visContainer[0].clientHeight);
             if (canvas.redraw) {
                 canvas.redraw();
             }
