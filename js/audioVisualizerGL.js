@@ -70,7 +70,7 @@ function gatherLocations(gl, program) {
     return locations;
 }
 
-function initTimeDomainVisualizationGL(canvas, pointCount) {
+function initTimeDomainVisualizationGL(canvas, audioAnalyser) {
     const gl = canvas.contextgl;
 
     const vShader = compileShader(gl, gl.VERTEX_SHADER, scalarToCircularVertShader);
@@ -79,7 +79,7 @@ function initTimeDomainVisualizationGL(canvas, pointCount) {
     const program = makeProgram(gl, vShader, fShader);
     canvas.glLocations = gatherLocations(gl, program);
 
-    updateFloatAttribute(gl, new Float32Array(Array.from(new Array(pointCount), (x, i) => i)), gl.STATIC_DRAW, canvas.glLocations['vertexId']);
+    updateFloatAttribute(gl, new Float32Array(Array.from(new Array(audioAnalyser.timeFftSize), (x, i) => i)), gl.STATIC_DRAW, canvas.glLocations['vertexId']);
 }
 
 function drawTimeDomainVisualizationGL(canvas, audioAnalyser) {

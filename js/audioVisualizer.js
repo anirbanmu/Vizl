@@ -85,15 +85,19 @@ function drawSegmentedBarPath(canvasCtx, center, angles, radii, magnitude, segme
     canvasCtx.closePath();
 }
 
-function freqIntensityMultipler(frequencyData) {
+function normalizeFreqMagnitude(mag, min, max) {
+    return Math.min(1.0, Math.max(0.0, (mag - min) / (max - min)));
+}
+
+function freqIntensityMultipler(frequencyData, min, max) {
     let rMultiplier = 0;
     for (let i = 0; i < frequencyData.length / 4; i++) {
         rMultiplier += frequencyData[i];
     }
-    return rMultiplier / (frequencyData.length / 4) / 255;
+    return normalizeFreqMagnitude(rMultiplier / (frequencyData.length / 4), min, max);
 }
 
-function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) {
+function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor, min, max) {
     let canvasCtx = canvas.context2d;
     let scalingDim = Math.min(canvas.width / 2, canvas.height / 2);
     let radius = freqIntensityFactor * (scalingDim / 2);
@@ -124,7 +128,7 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor) 
     for (let i = 0; i < frequencyCutOff; i++) {
         let angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
 
-        drawSegmentedBarPath(canvasCtx, center, angles, [radius, maxRadius], frequencyData[i] / 255, segmentCount, lineWidths);
+        drawSegmentedBarPath(canvasCtx, center, angles, [radius, maxRadius], normalizeFreqMagnitude(frequencyData[i], min, max), segmentCount, lineWidths);
     }
 
     // Fill for all bars
@@ -160,13 +164,14 @@ function scaleInRange(scale, range) {
     return (range[1] - range[0]) * scale + range[0];
 }
 
-function modifyTrackImage(canvas, frequencyData, freqIntensityFactor) {
+function modifyTrackImage(canvas, freqIntensityFactor) {
     setFilter(canvas, 'hue-rotate(' + scaleInRange(freqIntensityFactor, [0, 360]) + 'deg) blur(30px)');
 }
 
-function frequencyBasedVisualizations(canvases, frequencyData, freqIntensityFactor) {
-    modifyTrackImage(canvases[0], frequencyData, freqIntensityFactor);
-    drawFrequencyVisualization(canvases[1], frequencyData, freqIntensityFactor);
+function frequencyBasedVisualizations(canvases, frequencyData, minDb, maxDb) {
+    const freqIntensityFactor = freqIntensityMultipler(frequencyData, minDb, maxDb);
+    modifyTrackImage(canvases[0], freqIntensityFactor);
+    drawFrequencyVisualization(canvases[1], frequencyData, freqIntensityFactor, minDb, maxDb);
 }
 
 class CanvasHelper {
@@ -242,7 +247,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
         canvases = insertVisualizationCanvases(visContainer, opacities, filters, types, 3);
     }
 
-    initTimeDomainVisualizationGL(canvases[1], audioAnalyser.timeFftSize());
+    initTimeDomainVisualizationGL(canvases[1], audioAnalyser);
 
     let visualizationPaused = true;
     let trackImage = new Image();
@@ -271,8 +276,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
 
         repeatUntilPaused(drawTimeDomainVisualizationGL.bind(null, canvases[1], audioAnalyser));
         repeatUntilPaused(function() {
-            const frequencyData = audioAnalyser.getFrequencyData();
-            frequencyBasedVisualizations([canvases[0], canvases[2]], frequencyData, freqIntensityMultipler(frequencyData));
+            frequencyBasedVisualizations([canvases[0], canvases[2]], audioAnalyser.getFrequencyData(), audioAnalyser.minDb, audioAnalyser.maxDb);
         });
     };
 
