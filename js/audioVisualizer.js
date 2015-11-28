@@ -24,16 +24,16 @@ function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
     canvasCtx.stroke();
 }
 
-function drawTimeVisualization(canvas, audioAnalyser) {
-    let canvasCtx = canvas.context2d;
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+function drawTimeVisualization(renderer, audioAnalyser) {
+    let canvasCtx = renderer.context;
+    canvasCtx.clearRect(0, 0, renderer.width, renderer.height);
     canvasCtx.lineWidth = 1;
     canvasCtx.lineJoin = 'round';
     canvasCtx.strokeStyle = 'rgb(231, 76, 60)';
 
     let timeData = audioAnalyser.getTimeData(0.65);
-    drawTimeVisualizationCore(true, canvas, canvasCtx, timeData);
-    drawTimeVisualizationCore(false, canvas, canvasCtx, timeData);
+    drawTimeVisualizationCore(true, renderer, canvasCtx, timeData);
+    drawTimeVisualizationCore(false, renderer, canvasCtx, timeData);
 }
 
 function lineWidthIncrement(lineWidths, segmentCount) {
@@ -97,17 +97,16 @@ function freqIntensityMultipler(frequencyData, min, max) {
     return normalizeFreqMagnitude(rMultiplier / (frequencyData.length / 4), min, max);
 }
 
-function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor, min, max) {
-    let canvasCtx = canvas.context2d;
-    let scalingDim = Math.min(canvas.width / 2, canvas.height / 2);
+function drawFrequencyVisualization(renderer, frequencyData, freqIntensityFactor, min, max) {
+    let canvasCtx = renderer.context;
+    let scalingDim = Math.min(renderer.width / 2, renderer.height / 2);
     let radius = freqIntensityFactor * (scalingDim / 2);
     let frequencyCutOff = Math.floor(0.74 * frequencyData.length);
     let angularOffsetFactor = 0.15
     let angularIncrement = 2 * Math.PI / frequencyCutOff;
-    let center = canvas.center();
+    let center = renderer.center();
 
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-    //canvasCtx.lineJoin = 'miter';
+    canvasCtx.clearRect(0, 0, renderer.width, renderer.height);
 
     // Path for all segmented bars
     canvasCtx.beginPath();
@@ -135,22 +134,22 @@ function drawFrequencyVisualization(canvas, frequencyData, freqIntensityFactor, 
     canvasCtx.fill();
 }
 
-function drawTrackImage(canvas, image) {
-    let ctx = canvas.context2d;
-    let minDim = Math.min(canvas.width, canvas.height);
+function drawTrackImage(renderer, image) {
+    let ctx = renderer.context;
+    let minDim = Math.min(renderer.width, renderer.height);
 
     ctx.save();
 
     // Always center square image with half tiles (flipped) to fill the rest.
-    if (canvas.width > minDim) {
-        let x = canvas.width / 2 - minDim / 2;
+    if (renderer.width > minDim) {
+        let x = renderer.width / 2 - minDim / 2;
         ctx.drawImage(image, x, 0, minDim, minDim);
         ctx.scale(-1,1);
         ctx.drawImage(image, -x, 0, minDim, minDim);
         ctx.drawImage(image, -(x + minDim + minDim), 0, minDim, minDim);
     }
     else {
-        let y = canvas.height / 2 - minDim / 2;
+        let y = renderer.height / 2 - minDim / 2;
         ctx.drawImage(image, 0, y, minDim, minDim);
         ctx.scale(1,-1);
         ctx.drawImage(image, 0, -y, minDim, minDim);
@@ -164,45 +163,26 @@ function scaleInRange(scale, range) {
     return (range[1] - range[0]) * scale + range[0];
 }
 
-function modifyTrackImage(canvas, freqIntensityFactor) {
-    setFilter(canvas, 'hue-rotate(' + scaleInRange(freqIntensityFactor, [0, 360]) + 'deg) blur(30px)');
+function modifyTrackImage(renderer, freqIntensityFactor) {
+    setFilter(renderer, 'hue-rotate(' + scaleInRange(freqIntensityFactor, [0, 360]) + 'deg) blur(30px)');
 }
 
-function frequencyBasedVisualizations(canvases, frequencyData, minDb, maxDb) {
+function frequencyBasedVisualizations(renderers, frequencyData, minDb, maxDb) {
     const freqIntensityFactor = freqIntensityMultipler(frequencyData, minDb, maxDb);
-    modifyTrackImage(canvases[0], freqIntensityFactor);
-    drawFrequencyVisualization(canvases[1], frequencyData, freqIntensityFactor, minDb, maxDb);
+    modifyTrackImage(renderers[0], freqIntensityFactor);
+    drawFrequencyVisualization(renderers[1], frequencyData, freqIntensityFactor, minDb, maxDb);
 }
 
-class CanvasHelper {
-    constructor(canvas, gl, init) {
+class CanvasRenderer {
+    constructor(canvas, retrieveContext) {
         this.canvas = canvas;
-        this.contextgl = gl ? (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) : null;
-        this.context2d = gl ? null : canvas.getContext('2d');
+        this.context = retrieveContext === false ? null : canvas.getContext('2d');
         this.redraw = null;
-        this.render = null;
-        this.initWebGL();
-
-        // Meant for user of this class to store their shader program's attrib & uniform locations.
-        this.glLocations = {};
-    }
-
-    initWebGL() {
-        let gl = this.contextgl;
-        if (gl) {
-            gl.clearColor(0.0, 0.0, 0.0, 0.0); // Transparent
-            gl.enable(gl.DEPTH_TEST);
-            gl.depthFunc(gl.LEQUAL);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        }
     }
 
     resize(w, h) {
         this.width = w;
         this.height = h;
-        if (this.contextgl) {
-            this.contextgl.viewport(0, 0, this.width, this.height);
-        }
     }
 
     get width() {
@@ -222,43 +202,41 @@ class CanvasHelper {
     }
 
     center() {
-        return new Vector2d(this.canvas.width / 2, this.canvas.height / 2);
+        return new Vector2d(this.width / 2, this.height / 2);
     }
 }
 
-function insertVisualizationCanvases(visContainer, opacities, filters, contextTypes, layerCount) {
-    let canvases = [];
+function createVisualizationRenderers(visContainer, opacities, filters, rendererTypes, layerCount) {
+    let renderers = [];
     for (let i = 0; i < layerCount; ++i) {
         let newCanvas = $("<canvas style='z-index: " + i + "; position: absolute; left: 0; top: 0;' />");
         visContainer.append(newCanvas);
-        canvases[i] = new CanvasHelper(newCanvas[0], contextTypes[i]);
-        canvases[i].canvas.style.opacity = opacities[i];
-        setFilter(canvases[i], filters[i]);
+        renderers[i] = new rendererTypes[i](newCanvas[0]);
+        renderers[i].canvas.style.opacity = opacities[i];
+        setFilter(renderers[i], filters[i]);
     }
-    return canvases;
+    return renderers;
 }
 
 function AudioVisualizer(audioAnalyser, visContainer) {
-    let canvases;
+    let renderers;
     {
-        let opacities = [0.06, 1.0, 1.0];
-        let filters = ['blur(30px)', 'blur(1px)', ''];
-        let types = [false, true, false];
-        canvases = insertVisualizationCanvases(visContainer, opacities, filters, types, 3);
+        const opacities = [0.06, 1.0, 1.0];
+        const filters = ['blur(30px)', 'blur(1px)', ''];
+        const rendererTypes = [CanvasRenderer, TimeDomainRendererGL.bind(null, audioAnalyser), CanvasRenderer];
+        renderers = createVisualizationRenderers(visContainer, opacities, filters, rendererTypes, 3);
     }
-
-    initTimeDomainVisualizationGL(canvases[1], audioAnalyser);
 
     let visualizationPaused = true;
     let trackImage = new Image();
     trackImage.crossOrigin = 'anonymous';
     trackImage.onload = function() {
-        drawTrackImage(canvases[0], trackImage);
-        canvases[0].redraw = drawTrackImage.bind(null, canvases[0], trackImage);
+        drawTrackImage(renderers[0], trackImage);
+        renderers[0].redraw = drawTrackImage.bind(null, renderers[0], trackImage);
     };
 
     this.updateTrackImage = function(trackImgURL) {
-        canvases[0].redraw = null;
+        renderers[0].redraw = null;
         trackImage.src = trackImgURL;
     };
 
@@ -274,9 +252,9 @@ function AudioVisualizer(audioAnalyser, visContainer) {
     this.startVisualization = function() {
         visualizationPaused = false;
 
-        repeatUntilPaused(drawTimeDomainVisualizationGL.bind(null, canvases[1], audioAnalyser));
+        repeatUntilPaused(function() { renderers[1].renderVisual(); });
         repeatUntilPaused(function() {
-            frequencyBasedVisualizations([canvases[0], canvases[2]], audioAnalyser.getFrequencyData(), audioAnalyser.minDb, audioAnalyser.maxDb);
+            frequencyBasedVisualizations([renderers[0], renderers[2]], audioAnalyser.getFrequencyData(), audioAnalyser.minDb, audioAnalyser.maxDb);
         });
     };
 
@@ -285,7 +263,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
     };
 
     this.onResize = function() {
-        canvases.forEach(function(canvas) {
+        renderers.forEach(function(canvas) {
             canvas.resize(visContainer[0].clientWidth, visContainer[0].clientHeight);
             if (canvas.redraw) {
                 canvas.redraw();

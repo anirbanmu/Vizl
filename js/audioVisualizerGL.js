@@ -1,5 +1,23 @@
 'use strict';
 
+class CanvasRendererGL extends CanvasRenderer {
+    constructor(canvas) {
+        super(canvas, false);
+        let gl = this.context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        gl.clearColor(0.0, 0.0, 0.0, 0.0); // Transparent
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        this.glLocations = {}; // Consumer may use this to store their shader program's locations.
+    }
+
+    resize(w, h) {
+        super.resize(w, h);
+        this.context.viewport(0, 0, this.width, this.height);
+    }
+}
+
 const scalarToCircularVertShader = `
     attribute float vertexId; // Should be uint's but OpenGL ES doesn't allow integer attributes.
     attribute float magnitude;
@@ -70,37 +88,42 @@ function gatherLocations(gl, program) {
     return locations;
 }
 
-function initTimeDomainVisualizationGL(canvas, audioAnalyser) {
-    const gl = canvas.contextgl;
+class TimeDomainRendererGL extends CanvasRendererGL {
+    constructor(audioAnalyser, canvas) {
+        super(canvas);
+        this.getTimeData = audioAnalyser.getTimeData;
 
-    const vShader = compileShader(gl, gl.VERTEX_SHADER, scalarToCircularVertShader);
-    const fShader = compileShader(gl, gl.FRAGMENT_SHADER, trivialColorFragmentShader);
+        const gl = this.context;
 
-    const program = makeProgram(gl, vShader, fShader);
-    canvas.glLocations = gatherLocations(gl, program);
+        const vShader = compileShader(gl, gl.VERTEX_SHADER, scalarToCircularVertShader);
+        const fShader = compileShader(gl, gl.FRAGMENT_SHADER, trivialColorFragmentShader);
 
-    updateFloatAttribute(gl, new Float32Array(Array.from(new Array(audioAnalyser.timeFftSize), (x, i) => i)), gl.STATIC_DRAW, canvas.glLocations['vertexId']);
-}
+        const program = makeProgram(gl, vShader, fShader);
+        this.glLocations = gatherLocations(gl, program);
 
-function drawTimeDomainVisualizationGL(canvas, audioAnalyser) {
-    const gl = canvas.contextgl;
+        updateFloatAttribute(gl, new Float32Array(Array.from(new Array(audioAnalyser.timeFftSize), (x, i) => i)), gl.STATIC_DRAW, this.glLocations['vertexId']);
+    }
 
-    const timeData = audioAnalyser.getTimeData(0.65);
-    updateFloatAttribute(gl, timeData, gl.DYNAMIC_DRAW, canvas.glLocations['magnitude']);
+    renderVisual() {
+        const gl = this.context;
 
-    const minCanvasDim = Math.min(canvas.width, canvas.height);
-    gl.uniform2fv(canvas.glLocations['aspectScale'], [minCanvasDim / canvas.width, minCanvasDim / canvas.height]);
+        const timeData = this.getTimeData(0.65);
+        updateFloatAttribute(gl, timeData, gl.DYNAMIC_DRAW, this.glLocations['magnitude']);
 
-    const baseRadius = 0.25;
-    const magnitudeScale = baseRadius * 0.5;
-    const angularIncrement = 2 * Math.PI / timeData.length;
+        const minCanvasDim = Math.min(this.width, this.height);
+        gl.uniform2fv(this.glLocations['aspectScale'], [minCanvasDim / this.width, minCanvasDim / this.height]);
 
-    gl.uniform1f(canvas.glLocations['baseRadius'], baseRadius);
-    gl.uniform1f(canvas.glLocations['magnitudeScale'], magnitudeScale);
-    gl.uniform1f(canvas.glLocations['angularIncrement'], angularIncrement);
+        const baseRadius = 0.25;
+        const magnitudeScale = baseRadius * 0.5;
+        const angularIncrement = 2 * Math.PI / timeData.length;
 
-    gl.drawArrays(gl.LINE_STRIP, 0, timeData.length);
+        gl.uniform1f(this.glLocations['baseRadius'], baseRadius);
+        gl.uniform1f(this.glLocations['magnitudeScale'], magnitudeScale);
+        gl.uniform1f(this.glLocations['angularIncrement'], angularIncrement);
 
-    gl.uniform1f(canvas.glLocations['angularIncrement'], -angularIncrement);
-    gl.drawArrays(gl.LINE_STRIP, 0, timeData.length);
+        gl.drawArrays(gl.LINE_STRIP, 0, timeData.length);
+
+        gl.uniform1f(this.glLocations['angularIncrement'], -angularIncrement);
+        gl.drawArrays(gl.LINE_STRIP, 0, timeData.length);
+    }
 }
