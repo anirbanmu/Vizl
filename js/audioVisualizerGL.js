@@ -12,6 +12,22 @@ class CanvasRendererGL extends CanvasRenderer {
         this.glLocations = {}; // Consumer may use this to store their shader program's locations.
     }
 
+    get width() {
+        return this.context.drawingBufferWidth;
+    }
+
+    set width(w) {
+        super.width = w;
+    }
+
+    get height() {
+        return this.context.drawingBufferHeight;
+    }
+
+    set height(h) {
+        super.height = h;
+    }
+
     resize(w, h) {
         super.resize(w, h);
         this.context.viewport(0, 0, this.width, this.height);
@@ -280,10 +296,11 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
     }
 
     resize(w, h) {
-        super.resize(w, h);
+        super.resize(w * 4, h * 4);
 
-        const minCanvasDim = Math.min(this.width, this.height);
+        const minCanvasDim = this.minDim();
+        const center = this.center();
         this.context.uniform2fv(this.glLocations['aspectScale'], [minCanvasDim / this.width, minCanvasDim / this.height]);
-        this.context.uniform2fv(this.glLocations['center'], [this.width / 2, this.height / 2]);
+        this.context.uniform2fv(this.glLocations['center'], [center.x, center.y]);
     }
 }

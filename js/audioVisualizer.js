@@ -202,7 +202,7 @@ class CanvasRenderer {
     }
 
     minDim() {
-        return Math.min(this.canvas.width, this.canvas.height);
+        return Math.min(this.width, this.height);
     }
 
     center() {
