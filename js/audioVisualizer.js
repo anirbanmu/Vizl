@@ -170,7 +170,7 @@ function modifyTrackImage(renderer, freqIntensityFactor) {
 function frequencyBasedVisualizations(renderers, frequencyData, minDb, maxDb) {
     const freqIntensityFactor = freqIntensityMultipler(frequencyData, minDb, maxDb);
     modifyTrackImage(renderers[0], freqIntensityFactor);
-    drawFrequencyVisualization(renderers[1], frequencyData, freqIntensityFactor, minDb, maxDb);
+    //drawFrequencyVisualization(renderers[1], frequencyData, freqIntensityFactor, minDb, maxDb);
 }
 
 class CanvasRenderer {
@@ -201,6 +201,10 @@ class CanvasRenderer {
         this.canvas.height = h;
     }
 
+    minDim() {
+        return Math.min(this.canvas.width, this.canvas.height);
+    }
+
     center() {
         return new Vector2d(this.width / 2, this.height / 2);
     }
@@ -223,7 +227,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
     {
         const opacities = [0.06, 1.0, 1.0];
         const filters = ['blur(30px)', 'blur(1px)', ''];
-        const rendererTypes = [CanvasRenderer, TimeDomainRendererGL.bind(null, audioAnalyser), CanvasRenderer];
+        const rendererTypes = [CanvasRenderer, TimeDomainRendererGL.bind(null, audioAnalyser), FrequencyDomainRendererGL.bind(null, audioAnalyser)];
         renderers = createVisualizationRenderers(visContainer, opacities, filters, rendererTypes, 3);
     }
 
@@ -254,6 +258,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
 
         repeatUntilPaused(function() { renderers[1].renderVisual(); });
         repeatUntilPaused(function() {
+            renderers[2].renderVisual();
             frequencyBasedVisualizations([renderers[0], renderers[2]], audioAnalyser.getFrequencyData(), audioAnalyser.minDb, audioAnalyser.maxDb);
         });
     };
