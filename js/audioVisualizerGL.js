@@ -127,7 +127,7 @@ class TimeDomainRendererGL extends CanvasRendererGL {
         const timeData = this.getTimeData(0.65);
         updateFloatAttribute(gl, timeData, gl.DYNAMIC_DRAW, this.glLocations['magnitude']);
 
-        const baseRadius = 0.25;
+        const baseRadius = 0.20;
         const magnitudeScale = baseRadius * 0.5;
         const angularIncrement = 2 * Math.PI / timeData.length;
 
@@ -180,11 +180,23 @@ const freqBarsFragShader = `
 
     varying float normalizedMagnitude;
 
-    void main() {
-        float x = gl_FragCoord.x - center.x;
-        float y = gl_FragCoord.y - center.y;
+    vec4 getColor(float radiusSquared, vec2 bounds) {
+        float radius = sqrt(radiusSquared);
 
-        float currentRadiusSquared = x * x + y * y;
+        float rangeRelativeRadius = radius - bounds.x;
+        float rangeRadius = bounds.y - bounds.x;
+
+        float normalized = rangeRelativeRadius / rangeRadius;
+        if (normalized <= 0.5) {
+            return mix(vec4(0.0, 0.0, 1.0, 0.02), vec4(0.0, 1.0, 0.0, 0.5), normalized * 2.0);
+        }
+        return mix(vec4(0.0, 1.0, 0.0, 0.5), vec4(1.0, 0.0, 0.0, 1.0), (normalized - 0.5) * 2.0);
+    }
+
+    void main() {
+        vec2 pos = vec2(gl_FragCoord.x - center.x, gl_FragCoord.y - center.y);
+
+        float currentRadiusSquared = pos.x * pos.x + pos.y * pos.y;
 
         float exactBarCount = normalizedMagnitude * float(FREQUENCY_BAR_COUNT);
         float lastBarPortion = exactBarCount - floor(exactBarCount);
@@ -192,7 +204,7 @@ const freqBarsFragShader = `
 
         for (int i = 0; i > -1; i++) {
             if (i >= barCount) {
-                return;
+                break;
             }
 
             float innerRadiusSquared = barRadii[i].x * barRadii[i].x;
@@ -202,7 +214,7 @@ const freqBarsFragShader = `
                 outerRadiusSquared = outerRadius * outerRadius;
             }
             if (currentRadiusSquared > innerRadiusSquared && currentRadiusSquared < outerRadiusSquared) {
-                gl_FragColor = vec4(0.905, 0.298, 0.235, 1.0);
+                gl_FragColor = getColor(currentRadiusSquared, vec2(barRadii[0].x, barRadii[FREQUENCY_BAR_COUNT - 1].y));
                 return;
             }
         }
@@ -259,6 +271,8 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
         this.maxDb = audioAnalyser.maxDb;
 
         const gl = this.context;
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        gl.enable(gl.BLEND);
 
         const vShader = compileShader(gl, gl.VERTEX_SHADER, aspectCorrectingVertShader.split('FREQUENCY_MAGNITUDE_SIZE').join(audioAnalyser.freqBinCount));
 
@@ -286,7 +300,9 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
             const scalingDim = this.minDim() / 2;
             const freqIntensityFactor = freqIntensityMultipler(freqData, this.minDb, this.maxDb);
             const lineWidths = [2, pickGapUpperBound(2, this.freqBarCount, scalingDim * 0.20)];
-            const baseRadius = freqIntensityFactor * scalingDim * 0.45;
+
+            const minRadiusPortion = 0.15;
+            const baseRadius = scalingDim * (minRadiusPortion + freqIntensityFactor * (0.50 - minRadiusPortion));
             const maxRadius = baseRadius + scalingDim * 0.35;
             let bars = generateRadialBars(this.freqBarCount, lineWidths, [baseRadius, maxRadius]);
             gl.uniform2fv(this.glLocations['barRadii[0]'], new Float32Array(bars));
