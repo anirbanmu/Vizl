@@ -152,23 +152,24 @@ class TimeDomainRendererGL extends CanvasRendererGL {
 const aspectCorrectingVertShader = `
     precision highp float;
 
-    attribute float triangleId; // Should be uint's but OpenGL ES doesn't allow integer attributes.
-    attribute vec2 position;
+    attribute float polyIndex; // Should be uint's but OpenGL ES doesn't allow integer attributes.
+    attribute vec4 posAndAngles;
 
     uniform vec2 minMaxDb;
-
     uniform vec2 aspectScale;
-    uniform float magnitudes[FREQUENCY_MAGNITUDE_SIZE];
+    uniform float magnitudes[FREQUENCY_BARS];
 
     varying float normalizedMagnitude;
+    varying vec2 angles;
 
     float normalizeFreqMagnitude(float db, float minDb, float maxDb) {
         return min(1.0, max(0.0, (db - minDb) / (maxDb - minDb)));
     }
 
     void main() {
-        normalizedMagnitude = normalizeFreqMagnitude(magnitudes[int(triangleId)], minMaxDb.x, minMaxDb.y);
-        gl_Position = vec4(position.x * aspectScale.x, position.y * aspectScale.y, 0.0, 1.0);
+        angles = vec2(posAndAngles.zw);
+        normalizedMagnitude = normalizeFreqMagnitude(magnitudes[int(polyIndex)], minMaxDb.x, minMaxDb.y);
+        gl_Position = vec4(posAndAngles.x * aspectScale.x, posAndAngles.y * aspectScale.y, 0.0, 1.0);
     }
 `;
 
@@ -176,9 +177,10 @@ const freqBarsFragShader = `
     precision highp float;
 
     uniform vec2 center;
-    uniform vec2 barRadii[FREQUENCY_BAR_COUNT];
+    uniform vec2 barRadii[FREQUENCY_BAR_DIVS];
 
     varying float normalizedMagnitude;
+    varying vec2 angles;
 
     vec4 getColor(float radius, vec2 bounds) {
         float rangeRelativeRadius = radius - bounds.x;
@@ -192,7 +194,7 @@ const freqBarsFragShader = `
     }
 
     vec4 adjustAlphaRadialEdge(vec4 color, float radius, vec2 edgeRadii) {
-        float allowedDelta = 0.15;
+        const float allowedDelta = 0.15;
         float delta = min(radius - edgeRadii.x, edgeRadii.y - radius) / (edgeRadii.y - edgeRadii.x);
         if (delta < allowedDelta) {
             return vec4(color.rgb, color.a * (delta / allowedDelta));
@@ -200,12 +202,44 @@ const freqBarsFragShader = `
         return color;
     }
 
+    const float inf = 1.0 / 0.0;
+    const float pi = 3.141592653589793;
+
+    float arctan(vec2 position) {
+        float angleTan = position.y / position.x;
+
+        if (abs(angleTan) == inf) {
+            return (position.y < 0.0) ? -0.5 * pi : -1.5 * pi;
+        }
+
+        if (abs(angleTan) < 0.000000000001) {
+            return (position.x < 0.0) ? -pi : 0.0;
+        }
+
+        float angle = atan(angleTan);
+        if (angle > 0.0) {
+            return (position.x < 0.0) ? angle - pi : angle - 2.0 * pi;
+        }
+        return (position.x < 0.0) ? angle - pi : angle;
+    }
+
+    vec4 adjustAlphaBarEdge(vec4 color, vec2 position, vec2 angleBounds) {
+        float angle = arctan(position);
+
+        const float allowedDelta = 0.10;
+        float delta = min(abs(angleBounds.x - angle), abs(angleBounds.y - angle)) / abs(angleBounds.y - angleBounds.x);
+        if (delta < allowedDelta) {
+            return vec4(color.rgb, color.a * (delta / allowedDelta));
+        }
+
+        return color;
+    }
+
     void main() {
         vec2 pos = vec2(gl_FragCoord.x - center.x, gl_FragCoord.y - center.y);
-
         float radius = sqrt(pos.x * pos.x + pos.y * pos.y);
 
-        float exactBarCount = normalizedMagnitude * float(FREQUENCY_BAR_COUNT);
+        float exactBarCount = normalizedMagnitude * float(FREQUENCY_BAR_DIVS);
         float lastBarPortion = exactBarCount - floor(exactBarCount);
         int barCount = int(ceil(exactBarCount));
 
@@ -220,9 +254,9 @@ const freqBarsFragShader = `
                 outerRadius = lastBarPortion * (outerRadius - innerRadius) + innerRadius;
             }
             if (radius > innerRadius && radius < outerRadius) {
-                vec4 color = getColor(radius, vec2(barRadii[0].x, barRadii[FREQUENCY_BAR_COUNT - 1].y));
+                vec4 color = getColor(radius, vec2(barRadii[0].x, barRadii[FREQUENCY_BAR_DIVS - 1].y));
                 color = adjustAlphaRadialEdge(color, radius, vec2(innerRadius, outerRadius));
-                gl_FragColor = color;
+                gl_FragColor = adjustAlphaBarEdge(color, pos, angles);
                 return;
             }
         }
@@ -239,9 +273,9 @@ function generateRadialTriangles(divisions, gapPercent) {
     let triangles = [];
     for (let i = 0; i < divisions; i++) {
         const angles = [new Angle(angularIncrement * i + angleOffset), new Angle(angularIncrement * (i + 1) - angleOffset)];
-        triangles.push(0.0, 0.0);
-        triangles.push(triangleSideLength * angles[0].cos, triangleSideLength * angles[0].sin);
-        triangles.push(triangleSideLength * angles[1].cos, triangleSideLength * angles[1].sin);
+        triangles.push(0.0, 0.0, angles[0].angle, angles[1].angle);
+        triangles.push(triangleSideLength * angles[0].cos, triangleSideLength * angles[0].sin, angles[0].angle, angles[1].angle);
+        triangles.push(triangleSideLength * angles[1].cos, triangleSideLength * angles[1].sin, angles[0].angle, angles[1].angle);
     }
 
     return triangles;
@@ -282,20 +316,20 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         gl.enable(gl.BLEND);
 
-        const vShader = compileShader(gl, gl.VERTEX_SHADER, aspectCorrectingVertShader.split('FREQUENCY_MAGNITUDE_SIZE').join(audioAnalyser.freqBinCount));
+        const vShader = compileShader(gl, gl.VERTEX_SHADER, aspectCorrectingVertShader.split('FREQUENCY_BARS').join(audioAnalyser.freqBinCount));
 
         this.freqBarCount = 28;
-        const fShader = compileShader(gl, gl.FRAGMENT_SHADER, freqBarsFragShader.split('FREQUENCY_BAR_COUNT').join(this.freqBarCount));
+        const fShader = compileShader(gl, gl.FRAGMENT_SHADER, freqBarsFragShader.split('FREQUENCY_BAR_DIVS').join(this.freqBarCount));
 
         const program = makeProgram(gl, vShader, fShader);
         this.glLocations = gatherLocations(gl, program);
 
-        updateFloatAttribute(gl, new Float32Array(Array.from(new Array(audioAnalyser.freqBinCount * 3), (x, i) => Math.floor(i / 3))), gl.STATIC_DRAW, this.glLocations['triangleId']);
+        updateFloatAttribute(gl, new Float32Array(Array.from(new Array(audioAnalyser.freqBinCount * 3), (x, i) => Math.floor(i / 3))), gl.STATIC_DRAW, this.glLocations['polyIndex']);
 
         this.freqBinCount = Math.floor(0.74 * audioAnalyser.freqBinCount);
-        updateFloatAttribute(gl, new Float32Array(generateRadialTriangles(this.freqBinCount, 0.1)), gl.STATIC_DRAW, this.glLocations['position'], 2);
+        updateFloatAttribute(gl, new Float32Array(generateRadialTriangles(this.freqBinCount, 0.1)), gl.STATIC_DRAW, this.glLocations['posAndAngles'], 4);
 
-        this.context.uniform2fv(this.glLocations['minMaxDb'], [audioAnalyser.minDb, audioAnalyser.maxDb]);
+        gl.uniform2fv(this.glLocations['minMaxDb'], [audioAnalyser.minDb, audioAnalyser.maxDb]);
     }
 
     renderVisual() {
