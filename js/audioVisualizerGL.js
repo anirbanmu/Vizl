@@ -180,9 +180,7 @@ const freqBarsFragShader = `
 
     varying float normalizedMagnitude;
 
-    vec4 getColor(float radiusSquared, vec2 bounds) {
-        float radius = sqrt(radiusSquared);
-
+    vec4 getColor(float radius, vec2 bounds) {
         float rangeRelativeRadius = radius - bounds.x;
         float rangeRadius = bounds.y - bounds.x;
 
@@ -193,10 +191,19 @@ const freqBarsFragShader = `
         return mix(vec4(0.0, 1.0, 0.0, 0.5), vec4(1.0, 0.0, 0.0, 1.0), (normalized - 0.5) * 2.0);
     }
 
+    vec4 adjustAlphaRadialEdge(vec4 color, float radius, vec2 edgeRadii) {
+        float allowedDelta = 0.15;
+        float delta = min(radius - edgeRadii.x, edgeRadii.y - radius) / (edgeRadii.y - edgeRadii.x);
+        if (delta < allowedDelta) {
+            return vec4(color.rgb, color.a * (delta / allowedDelta));
+        }
+        return color;
+    }
+
     void main() {
         vec2 pos = vec2(gl_FragCoord.x - center.x, gl_FragCoord.y - center.y);
 
-        float currentRadiusSquared = pos.x * pos.x + pos.y * pos.y;
+        float radius = sqrt(pos.x * pos.x + pos.y * pos.y);
 
         float exactBarCount = normalizedMagnitude * float(FREQUENCY_BAR_COUNT);
         float lastBarPortion = exactBarCount - floor(exactBarCount);
@@ -207,14 +214,15 @@ const freqBarsFragShader = `
                 break;
             }
 
-            float innerRadiusSquared = barRadii[i].x * barRadii[i].x;
-            float outerRadiusSquared = barRadii[i].y * barRadii[i].y;
+            float innerRadius = barRadii[i].x;
+            float outerRadius = barRadii[i].y;
             if (i + 1 == barCount) {
-                float outerRadius = lastBarPortion * (barRadii[i].y - barRadii[i].x) + barRadii[i].x;
-                outerRadiusSquared = outerRadius * outerRadius;
+                outerRadius = lastBarPortion * (outerRadius - innerRadius) + innerRadius;
             }
-            if (currentRadiusSquared > innerRadiusSquared && currentRadiusSquared < outerRadiusSquared) {
-                gl_FragColor = getColor(currentRadiusSquared, vec2(barRadii[0].x, barRadii[FREQUENCY_BAR_COUNT - 1].y));
+            if (radius > innerRadius && radius < outerRadius) {
+                vec4 color = getColor(radius, vec2(barRadii[0].x, barRadii[FREQUENCY_BAR_COUNT - 1].y));
+                color = adjustAlphaRadialEdge(color, radius, vec2(innerRadius, outerRadius));
+                gl_FragColor = color;
                 return;
             }
         }
