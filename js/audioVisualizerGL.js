@@ -145,7 +145,7 @@ class TimeDomainRendererGL extends CanvasRendererGL {
         super.resize(w, h);
 
         const minCanvasDim = this.minDim();
-        this.context.uniform2fv(this.glLocations['aspectScale'], [minCanvasDim / this.width, minCanvasDim / this.height]);
+        this.context.uniform2fv(this.glLocations['aspectScale'], new Float32Array([minCanvasDim / this.width, minCanvasDim / this.height]));
     }
 }
 
@@ -153,11 +153,11 @@ const aspectCorrectingVertShader = `
     precision highp float;
 
     attribute float polyIndex; // Should be uint's but OpenGL ES doesn't allow integer attributes.
-    attribute vec4 posAndAngles;
+    attribute vec4 posAndAngles; // xy: position, zw: corresponding angles that produced this poly.
 
     uniform vec2 minMaxDb;
     uniform vec2 aspectScale;
-    uniform float magnitudes[FREQUENCY_BARS];
+    uniform vec4 magnitudes[FREQUENCY_BARS / 4]; // Flat array packed into vec4's to save uniform space.
 
     varying float normalizedMagnitude;
     varying vec2 angles;
@@ -166,9 +166,19 @@ const aspectCorrectingVertShader = `
         return min(1.0, max(0.0, (db - minDb) / (maxDb - minDb)));
     }
 
+    float getMagnitude(int index) {
+        int arrayIndex = index / 4;
+        int subIndex = index - arrayIndex * 4;
+        vec4 m = magnitudes[arrayIndex];
+        if (subIndex == 0) return m.x;
+        if (subIndex == 1) return m.y;
+        if (subIndex == 2) return m.z;
+        return m.w;
+    }
+
     void main() {
         angles = vec2(posAndAngles.zw);
-        normalizedMagnitude = normalizeFreqMagnitude(magnitudes[int(polyIndex)], minMaxDb.x, minMaxDb.y);
+        normalizedMagnitude = normalizeFreqMagnitude(getMagnitude(int(polyIndex)), minMaxDb.x, minMaxDb.y);
         gl_Position = vec4(posAndAngles.x * aspectScale.x, posAndAngles.y * aspectScale.y, 0.0, 1.0);
     }
 `;
@@ -178,6 +188,7 @@ const freqBarsFragShader = `
 
     uniform vec2 center;
     uniform vec2 barRadii[FREQUENCY_BAR_DIVS];
+    uniform vec4 colors[FREQUENCY_BAR_COLORS];
 
     varying float normalizedMagnitude;
     varying vec2 angles;
@@ -187,10 +198,16 @@ const freqBarsFragShader = `
         float rangeRadius = bounds.y - bounds.x;
 
         float normalized = rangeRelativeRadius / rangeRadius;
-        if (normalized <= 0.5) {
-            return mix(vec4(0.0, 0.0, 1.0, 0.02), vec4(0.0, 1.0, 0.0, 0.5), normalized * 2.0);
+        float normalizedDiv = 1.0 / float(FREQUENCY_BAR_COLORS - 1);
+        for (int i = 0; i < FREQUENCY_BAR_COLORS; i++) {
+            float divStart = float(i) * normalizedDiv;
+            if (normalized > divStart && normalized < divStart + normalizedDiv) {
+                return mix(colors[i], colors[i + 1], (normalized - divStart) / normalizedDiv);
+            }
         }
-        return mix(vec4(0.0, 1.0, 0.0, 0.5), vec4(1.0, 0.0, 0.0, 1.0), (normalized - 0.5) * 2.0);
+
+        // Should be unreachable.
+        return vec4(0.0, 0.0, 0.0, 0.0);
     }
 
     vec4 adjustAlphaRadialEdge(vec4 color, float radius, vec2 edgeRadii) {
@@ -210,10 +227,6 @@ const freqBarsFragShader = `
 
         if (abs(angleTan) == inf) {
             return (position.y < 0.0) ? -0.5 * pi : -1.5 * pi;
-        }
-
-        if (abs(angleTan) < 0.000000000001) {
-            return (position.x < 0.0) ? -pi : 0.0;
         }
 
         float angle = atan(angleTan);
@@ -305,6 +318,14 @@ function pickGapUpperBound(gapRangeStart, segmentCount, length) {
     return gapRangeStart + 2 * (length - segmentCount * gapRangeStart) / (segmentCount - 1);
 }
 
+function replaceAll(str, replacements) {
+    let replaced = str;
+    for (let key in replacements) {
+        replaced = replaced.split(key).join(replacements[key]);
+    }
+    return replaced;
+}
+
 class FrequencyDomainRendererGL extends CanvasRendererGL {
     constructor(audioAnalyser, canvas) {
         super(canvas);
@@ -316,10 +337,10 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         gl.enable(gl.BLEND);
 
-        const vShader = compileShader(gl, gl.VERTEX_SHADER, aspectCorrectingVertShader.split('FREQUENCY_BARS').join(audioAnalyser.freqBinCount));
+        const vShader = compileShader(gl, gl.VERTEX_SHADER, replaceAll(aspectCorrectingVertShader, {'FREQUENCY_BARS': audioAnalyser.freqBinCount}));
 
         this.freqBarCount = 28;
-        const fShader = compileShader(gl, gl.FRAGMENT_SHADER, freqBarsFragShader.split('FREQUENCY_BAR_DIVS').join(this.freqBarCount));
+        const fShader = compileShader(gl, gl.FRAGMENT_SHADER, replaceAll(freqBarsFragShader, {'FREQUENCY_BAR_DIVS': this.freqBarCount, 'FREQUENCY_BAR_COLORS': 3}));
 
         const program = makeProgram(gl, vShader, fShader);
         this.glLocations = gatherLocations(gl, program);
@@ -329,14 +350,21 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
         this.freqBinCount = Math.floor(0.74 * audioAnalyser.freqBinCount);
         updateFloatAttribute(gl, new Float32Array(generateRadialTriangles(this.freqBinCount, 0.1)), gl.STATIC_DRAW, this.glLocations['posAndAngles'], 4);
 
-        gl.uniform2fv(this.glLocations['minMaxDb'], [audioAnalyser.minDb, audioAnalyser.maxDb]);
+        gl.uniform2fv(this.glLocations['minMaxDb'], new Float32Array([audioAnalyser.minDb, audioAnalyser.maxDb]));
+
+        {
+            const colors = new Float32Array([0.0, 0.0, 1.0, 0.02,
+                                             0.0, 1.0, 0.0, 0.5,
+                                             1.0, 0.0, 0.0, 1.0]);
+            gl.uniform4fv(this.glLocations['colors[0]'], colors);
+        }
     }
 
     renderVisual() {
         const gl = this.context;
 
         const freqData = this.getFrequencyData();
-        gl.uniform1fv(this.glLocations['magnitudes[0]'], freqData);
+        gl.uniform4fv(this.glLocations['magnitudes[0]'], freqData);
 
         {
             const scalingDim = this.minDim() / 2;
@@ -358,7 +386,7 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
 
         const minCanvasDim = this.minDim();
         const center = this.center();
-        this.context.uniform2fv(this.glLocations['aspectScale'], [minCanvasDim / this.width, minCanvasDim / this.height]);
-        this.context.uniform2fv(this.glLocations['center'], [center.x, center.y]);
+        this.context.uniform2fv(this.glLocations['aspectScale'], new Float32Array([minCanvasDim / this.width, minCanvasDim / this.height]));
+        this.context.uniform2fv(this.glLocations['center'], new Float32Array([center.x, center.y]));
     }
 }
