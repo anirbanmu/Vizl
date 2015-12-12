@@ -34,28 +34,6 @@ class CanvasRendererGL extends CanvasRenderer {
     }
 }
 
-const scalarToCircularVertShader = `
-    attribute float vertexId; // Should be uint's but OpenGL ES doesn't allow integer attributes.
-    attribute float magnitude;
-
-    uniform float baseRadius;
-    uniform float magnitudeScale;
-    uniform float angularIncrement;
-    uniform vec2 aspectScale;
-
-    void main() {
-        float angle = angularIncrement * vertexId;
-        float finalRadius = baseRadius + magnitudeScale * magnitude;
-        gl_Position = vec4(finalRadius * cos(angle) * aspectScale.x, finalRadius * sin(angle) * aspectScale.y, 0.0, 1.0);
-    }
-`;
-
-const trivialColorFragmentShader = `
-    void main() {
-        gl_FragColor = vec4(0.905, 0.298, 0.235, 1.0);
-    }
-`;
-
 function compileShader(gl, shaderType, shader) {
     let s = gl.createShader(shaderType);
     gl.shaderSource(s, shader);
@@ -104,6 +82,28 @@ function gatherLocations(gl, program) {
     }
     return locations;
 }
+
+const scalarToCircularVertShader = `
+    attribute float vertexId; // Should be uint's but OpenGL ES doesn't allow integer attributes.
+    attribute float magnitude;
+
+    uniform float baseRadius;
+    uniform float magnitudeScale;
+    uniform float angularIncrement;
+    uniform vec2 aspectScale;
+
+    void main() {
+        float angle = angularIncrement * vertexId;
+        float finalRadius = baseRadius + magnitudeScale * magnitude;
+        gl_Position = vec4(finalRadius * cos(angle) * aspectScale.x, finalRadius * sin(angle) * aspectScale.y, 0.0, 1.0);
+    }
+`;
+
+const trivialColorFragmentShader = `
+    void main() {
+        gl_FragColor = vec4(0.905, 0.298, 0.235, 1.0);
+    }
+`;
 
 class TimeDomainRendererGL extends CanvasRendererGL {
     constructor(audioAnalyser, canvas) {
@@ -233,15 +233,6 @@ const freqBarsFragShader = `
         return vec4(0.0, 0.0, 0.0, 0.0);
     }
 
-    vec4 adjustAlphaRadialEdge(vec4 color, float radius, vec2 edgeRadii) {
-        const float allowedDelta = 0.15;
-        float delta = min(radius - edgeRadii.x, edgeRadii.y - radius) / (edgeRadii.y - edgeRadii.x);
-        if (delta < allowedDelta) {
-            return vec4(color.rgb, color.a * (delta / allowedDelta));
-        }
-        return color;
-    }
-
     const float inf = 1.0 / 0.0;
     const float pi = 3.141592653589793;
 
@@ -259,7 +250,16 @@ const freqBarsFragShader = `
         return (position.x < 0.0) ? angle - pi : angle;
     }
 
-    vec4 adjustAlphaBarEdge(vec4 color, vec2 position, vec2 angleBounds) {
+    vec4 applyRadialEdgeTransparency(vec4 color, float radius, vec2 edgeRadii) {
+        const float allowedDelta = 0.15;
+        float delta = min(radius - edgeRadii.x, edgeRadii.y - radius) / (edgeRadii.y - edgeRadii.x);
+        if (delta < allowedDelta) {
+            return vec4(color.rgb, color.a * (delta / allowedDelta));
+        }
+        return color;
+    }
+
+    vec4 applyBarEdgeTransparency(vec4 color, vec2 position, vec2 angleBounds) {
         float angle = arctan(position);
 
         const float allowedDelta = 0.10;
@@ -267,7 +267,6 @@ const freqBarsFragShader = `
         if (delta < allowedDelta) {
             return vec4(color.rgb, color.a * (delta / allowedDelta));
         }
-
         return color;
     }
 
@@ -287,13 +286,13 @@ const freqBarsFragShader = `
             return;
         }
 
-        vec4 color = getColor(radius, vec2(barRadii[0].x, barRadii[FREQUENCY_BAR_DIVS - 1].y));
-        color = adjustAlphaRadialEdge(color, radius, radii);
-        gl_FragColor = adjustAlphaBarEdge(color, pos, angles);
+        gl_FragColor = getColor(radius, vec2(barRadii[0].x, barRadii[FREQUENCY_BAR_DIVS - 1].y));
+        gl_FragColor = applyRadialEdgeTransparency(gl_FragColor, radius, radii);
+        gl_FragColor = applyBarEdgeTransparency(gl_FragColor, pos, angles);
     }
 `;
 
-function generateVertices(divisions, gapPercent, barCount) {
+function generateVertexAttributes(divisions, gapPercent, barCount) {
     const angularIncrement = -2 * Math.PI / divisions;
     const angleOffset = angularIncrement * gapPercent;
     const triangleSideLength = 1 / Math.cos(angularIncrement - 2 * angleOffset);
@@ -325,7 +324,7 @@ function generateRadialBars(barCount, gapWidthRange, radii) {
     for (let i = 0; i < barCount; ++i) {
         const innerRadius = lastOuterRadius;
         const outerRadius = innerRadius + (radialIncrement + radialMultiplier * i);
-        Array.prototype.push.apply(bars, [innerRadius, outerRadius]);
+        bars.push(innerRadius, outerRadius);
         lastOuterRadius = outerRadius + (gapWidthRange[0] + lineWidthInc * i);
     }
     return bars;
@@ -363,11 +362,10 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
 
         {
             this.freqBinCount = Math.floor(0.74 * audioAnalyser.freqBinCount);
-            let vertProperties = generateVertices(this.freqBinCount, 0.1, this.freqBarCount);
+            let vertProperties = generateVertexAttributes(this.freqBinCount, 0.1, this.freqBarCount);
             updateFloatAttribute(gl, new Float32Array(vertProperties[0]), gl.STATIC_DRAW, this.glLocations['index'], 3);
             updateFloatAttribute(gl, new Float32Array(vertProperties[1]), gl.STATIC_DRAW, this.glLocations['barAngles'], 2);
             this.vertCount = vertProperties[2];
-            console.log(vertProperties);
         }
 
         gl.uniform2fv(this.glLocations['minMaxDb'], new Float32Array([audioAnalyser.minDb, audioAnalyser.maxDb]));
