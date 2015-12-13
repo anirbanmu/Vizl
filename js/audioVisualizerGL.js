@@ -2,7 +2,7 @@
 
 class CanvasRendererGL extends CanvasRenderer {
     constructor(canvas) {
-        super(canvas, false);
+        super(canvas);
         let gl = this.context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
         gl.clearColor(0.0, 0.0, 0.0, 0.0); // Transparent
         gl.enable(gl.DEPTH_TEST);

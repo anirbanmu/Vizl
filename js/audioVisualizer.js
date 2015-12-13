@@ -1,5 +1,15 @@
 'use strict';
 
+const webGLSupported = function () {
+                            try {
+                                let canvas = document.createElement( 'canvas' );
+                                return !!window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) && true;
+                            }
+                            catch(e) {
+                                return false;
+                            }
+                        }();
+
 function setFilter(element, filter) {
     element.canvas.style.webkitFilter = element.canvas.style.filter = filter;
 }
@@ -24,14 +34,13 @@ function drawTimeVisualizationCore(clockWise, canvas, canvasCtx, timeData) {
     canvasCtx.stroke();
 }
 
-function drawTimeVisualization(renderer, audioAnalyser) {
+function drawTimeVisualization(renderer, timeData) {
     let canvasCtx = renderer.context;
     canvasCtx.clearRect(0, 0, renderer.width, renderer.height);
     canvasCtx.lineWidth = 1;
     canvasCtx.lineJoin = 'round';
     canvasCtx.strokeStyle = 'rgb(231, 76, 60)';
 
-    let timeData = audioAnalyser.getTimeData(0.65);
     drawTimeVisualizationCore(true, renderer, canvasCtx, timeData);
     drawTimeVisualizationCore(false, renderer, canvasCtx, timeData);
 }
@@ -174,9 +183,8 @@ function frequencyBasedVisualizations(renderers, frequencyData, minDb, maxDb) {
 }
 
 class CanvasRenderer {
-    constructor(canvas, retrieveContext) {
+    constructor(canvas) {
         this.canvas = canvas;
-        this.context = retrieveContext === false ? null : canvas.getContext('2d');
         this.redraw = null;
     }
 
@@ -210,6 +218,37 @@ class CanvasRenderer {
     }
 }
 
+class CanvasRenderer2D extends CanvasRenderer {
+    constructor(canvas) {
+        super(canvas);
+        this.context = canvas.getContext('2d');
+    }
+}
+
+class TimeDomainRenderer2D extends CanvasRenderer2D {
+    constructor(audioAnalyser, canvas) {
+        super(canvas);
+        this.audioAnalyser = audioAnalyser;
+    }
+
+    renderVisual() {
+        drawTimeVisualization(this, this.audioAnalyser.getTimeData(0.65));
+    }
+}
+
+class FrequencyDomainRenderer2D extends CanvasRenderer2D {
+    constructor(audioAnalyser, canvas) {
+        super(canvas);
+        this.audioAnalyser = audioAnalyser;
+    }
+
+    renderVisual() {
+        const frequencyData = this.audioAnalyser.getFrequencyData();
+        const freqIntensityFactor = freqIntensityMultipler(frequencyData, this.audioAnalyser.minDb, this.audioAnalyser.maxDb);
+        drawFrequencyVisualization(this, frequencyData, freqIntensityFactor, this.audioAnalyser.minDb, this.audioAnalyser.maxDb);
+    }
+}
+
 function createVisualizationRenderers(visContainer, opacities, filters, rendererTypes, layerCount) {
     let renderers = [];
     for (let i = 0; i < layerCount; ++i) {
@@ -222,12 +261,18 @@ function createVisualizationRenderers(visContainer, opacities, filters, renderer
     return renderers;
 }
 
+function chooseRenderer(renderer2D, rendererGL) {
+    return webGLSupported ? rendererGL : renderer2D;
+}
+
 function AudioVisualizer(audioAnalyser, visContainer) {
     let renderers;
     {
         const opacities = [0.06, 1.0, 1.0];
         const filters = ['blur(30px)', 'blur(1px)', ''];
-        const rendererTypes = [CanvasRenderer, TimeDomainRendererGL.bind(null, audioAnalyser), FrequencyDomainRendererGL.bind(null, audioAnalyser)];
+        const rendererTypes = [CanvasRenderer2D,
+                               chooseRenderer(TimeDomainRenderer2D.bind(null, audioAnalyser), TimeDomainRendererGL.bind(null, audioAnalyser)),
+                               chooseRenderer(FrequencyDomainRenderer2D.bind(null, audioAnalyser), FrequencyDomainRendererGL.bind(null, audioAnalyser))];
         renderers = createVisualizationRenderers(visContainer, opacities, filters, rendererTypes, 3);
     }
 
