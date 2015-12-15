@@ -100,8 +100,12 @@ const scalarToCircularVertShader = `
 `;
 
 const trivialColorFragmentShader = `
+    precision highp float;
+
+    uniform vec4 color;
+
     void main() {
-        gl_FragColor = vec4(0.905, 0.298, 0.235, 1.0);
+        gl_FragColor = color;
     }
 `;
 
@@ -119,6 +123,8 @@ class TimeDomainRendererGL extends CanvasRendererGL {
         this.glLocations = gatherLocations(gl, program);
 
         updateFloatAttribute(gl, new Float32Array(Array.from(new Array(audioAnalyser.timeFftSize), (x, i) => i)), gl.STATIC_DRAW, this.glLocations['vertexId']);
+
+        gl.uniform4fv(this.glLocations['color'], new Float32Array([0.905, 0.298, 0.235, 0.5]));
     }
 
     renderVisual() {
@@ -208,8 +214,14 @@ const freqBarsFragShader = `
     precision highp float;
 
     uniform vec2 center;
-    uniform vec4 colors[FREQUENCY_BAR_COLORS];
     uniform vec2 barRadii[FREQUENCY_BAR_DIVS];
+
+    struct Color {
+        vec4 color;
+        float colorStop;
+    };
+
+    uniform Color colors[FREQUENCY_BAR_COLORS];
 
     varying float normalizedMagnitude;
     varying vec2 angles;
@@ -221,16 +233,18 @@ const freqBarsFragShader = `
         float rangeRadius = bounds.y - bounds.x;
 
         float normalized = rangeRelativeRadius / rangeRadius;
-        float normalizedDiv = 1.0 / float(FREQUENCY_BAR_COLORS - 1);
+        Color lastColor = Color(vec4(0.0, 0.0, 0.0, 0.0), 0.0); // Takes care of first color stop not being at 0.0
         for (int i = 0; i < FREQUENCY_BAR_COLORS; i++) {
-            float divStart = float(i) * normalizedDiv;
-            if (normalized > divStart && normalized < divStart + normalizedDiv) {
-                return mix(colors[i], colors[i + 1], (normalized - divStart) / normalizedDiv);
+            Color currentColor = colors[i];
+            if (normalized > lastColor.colorStop && normalized < currentColor.colorStop) {
+                return mix(lastColor.color, currentColor.color, (normalized - lastColor.colorStop) / (currentColor.colorStop - lastColor.colorStop));
             }
+
+            lastColor = currentColor;
         }
 
-        // Should be unreachable.
-        return vec4(0.0, 0.0, 0.0, 0.0);
+        // Color stops did not cover upto 1.0.
+        return mix(lastColor.color, vec4(0.0, 0.0, 0.0, 0.0), (normalized - lastColor.colorStop) / (1.0 - lastColor.colorStop));
     }
 
     const float inf = 1.0 / 0.0;
@@ -342,6 +356,11 @@ function replaceAll(str, replacements) {
     return replaced;
 }
 
+function hexToRGB(h) {
+    const mask = 0xFF;
+    return [(h >> 16) & mask, (h >> 8) & mask, h & mask].map((x) => x / 255);
+}
+
 class FrequencyDomainRendererGL extends CanvasRendererGL {
     constructor(audioAnalyser, canvas) {
         super(canvas);
@@ -353,16 +372,21 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         gl.enable(gl.BLEND);
 
-        this.freqBarCount = 28;
-        const vShader = compileShader(gl, gl.VERTEX_SHADER, replaceAll(aspectCorrectingVertShader, {'FREQUENCY_BARS': audioAnalyser.freqBinCount, 'FREQUENCY_BAR_DIVS': this.freqBarCount}));
-        const fShader = compileShader(gl, gl.FRAGMENT_SHADER, replaceAll(freqBarsFragShader, {'FREQUENCY_BAR_DIVS': this.freqBarCount, 'FREQUENCY_BAR_COLORS': 3}));
+        const colors = [...hexToRGB(0x00D1B1), 0.0, 0.0,
+                        ...hexToRGB(0xABE300), 0.7, 0.2,
+                        ...hexToRGB(0xFF8400), 1.0, 0.65,
+                        ...hexToRGB(0xFF2D00), 1.0, 1.0];
+
+        this.barDivs = 28;
+        const vShader = compileShader(gl, gl.VERTEX_SHADER, replaceAll(aspectCorrectingVertShader, {'FREQUENCY_BARS': audioAnalyser.freqBinCount, 'FREQUENCY_BAR_DIVS': this.barDivs}));
+        const fShader = compileShader(gl, gl.FRAGMENT_SHADER, replaceAll(freqBarsFragShader, {'FREQUENCY_BAR_DIVS': this.barDivs, 'FREQUENCY_BAR_COLORS': colors.length}));
 
         const program = makeProgram(gl, vShader, fShader);
         this.glLocations = gatherLocations(gl, program);
 
         {
             this.freqBinCount = Math.floor(0.74 * audioAnalyser.freqBinCount);
-            let vertProperties = generateVertexAttributes(this.freqBinCount, 0.1, this.freqBarCount);
+            let vertProperties = generateVertexAttributes(this.freqBinCount, 0.1, this.barDivs);
             updateFloatAttribute(gl, new Float32Array(vertProperties[0]), gl.STATIC_DRAW, this.glLocations['index'], 3);
             updateFloatAttribute(gl, new Float32Array(vertProperties[1]), gl.STATIC_DRAW, this.glLocations['barAngles'], 2);
             this.vertCount = vertProperties[2];
@@ -370,11 +394,9 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
 
         gl.uniform2fv(this.glLocations['minMaxDb'], new Float32Array([audioAnalyser.minDb, audioAnalyser.maxDb]));
 
-        {
-            const colors = new Float32Array([0.0, 0.0, 1.0, 0.02,
-                                             0.0, 1.0, 0.0, 0.5,
-                                             1.0, 0.0, 0.0, 1.0]);
-            gl.uniform4fv(this.glLocations['colors[0]'], colors);
+        for (let i = 0; i < colors.length; i += 5) {
+            gl.uniform4fv(this.glLocations['colors[' + Math.floor(i / 5) + '].color'], new Float32Array(colors.slice(i, i + 4)));
+            gl.uniform1f(this.glLocations['colors[' + Math.floor(i / 5) + '].colorStop'], colors[i + 4]);
         }
     }
 
@@ -387,12 +409,12 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
         {
             const scalingDim = this.minDim() / 2;
             const freqIntensityFactor = freqIntensityMultipler(freqData, this.minDb, this.maxDb);
-            const lineWidths = [2, pickGapUpperBound(2, this.freqBarCount, scalingDim * 0.20)];
+            const lineWidths = [2, pickGapUpperBound(2, this.barDivs, scalingDim * 0.20)];
 
             const minRadiusPortion = 0.15;
             const baseRadius = scalingDim * (minRadiusPortion + freqIntensityFactor * (0.50 - minRadiusPortion));
             const maxRadius = baseRadius + scalingDim * 0.35;
-            let bars = generateRadialBars(this.freqBarCount, lineWidths, [baseRadius, maxRadius]);
+            let bars = generateRadialBars(this.barDivs, lineWidths, [baseRadius, maxRadius]);
             gl.uniform2fv(this.glLocations['barRadii[0]'], new Float32Array(bars));
         }
 
