@@ -372,7 +372,7 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         gl.enable(gl.BLEND);
 
-        const colors = [...hexToRGB(0x00D1B1), 0.02, 0.0,
+        const colors = [...hexToRGB(0x00D1B1), 0.0, 0.0,
                         ...hexToRGB(0xABE300), 0.7, 0.2,
                         ...hexToRGB(0xFF8400), 1.0, 0.65,
                         ...hexToRGB(0xFF2D00), 1.0, 1.0];
