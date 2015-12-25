@@ -1,48 +1,58 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Vizl</title>
 
-    <script src='http://code.jquery.com/jquery-2.1.4.min.js'></script>
-    <script src='js/util.js'></script>
-    <script src='js/config.js'></script>
-    <script src="js/audioPlayer.js"></script>
-    <script src="js/audioVisualizer.js"></script>
-    <script src="js/audioVisualizerGL.js"></script>
-    <script src="js/audioHub.js"></script>
-    <script src='js/main.js'></script>
+<head>
+  <meta charset="UTF-8">
+  <title>Vizl</title>
 
-    <link href='https://fonts.googleapis.com/css?family=Fugaz+One' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" href="css/style.css">
-  </head>
+  <script src='http://code.jquery.com/jquery-2.1.4.min.js'></script>
+  <script src='js/util.js'></script>
+  <script src='js/config.js'></script>
+  <script src="js/audioPlayer.js"></script>
+  <script src="js/audioVisualizer.js"></script>
+  <script src="js/audioVisualizerGL.js"></script>
+  <script src="js/audioHub.js"></script>
+  <script src='js/main.js'></script>
 
-  <body>
+  <link href='https://fonts.googleapis.com/css?family=Fugaz+One' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="css/style.css">
+</head>
 
-    <div id='container'>
-      <div id='topbar'>
-        <div id='logo'>Vizl</div>
-        <ul id='menu'>
+<body>
 
-          <div id='progressBar'></div>
-          <li id='trackInfo'></li>
-          <li id='previousButton' class='fontawesome-backward i'></li>
-          <li id='playPauseButton' class='fontawesome-play i'></li>
-          <li id='nextButton' class='fontawesome-forward i'></li>
-          <li class='fontawesome-cog i'></li>
-        </ul>
-      </div>
-      <div id='feed'>
-        <div id="options" class='card'>
-
-        </div>
-        <div class='card'>
-          <input class='i' id='urlInputBar'>
-          <button class='i' id='streamSubmit'>+</button>
-        </div>
+  <div class='widget' id='controls'>
+    <div class='row' id='playerDis'>
+      <div id='trackInfo'>
+        Untouchable - Pusha T
       </div>
     </div>
+    <div class='row' id='progressBar'>
+      <div id='bar'></div>
+    </div>
+    <div class='spacer'></div>
+    <div class='row' id='art'></div>
+    <div class='row' id='playerCtrl'>
+      <div id='left'>
+        <div class='fontawesome-search i'></div>
+      </div>
+      <div id='center'>
+        <div class='fontawesome-play i' id='playPauseButton'></div>
+      </div>
+      <div id='right'>
+        <div class='fontawesome-cog i'></div>
+      </div>
+    </div>
+    <div class='row' id='e'>
+      <input>
+      <button>
+        <div id='playPauseButton' class='i'>
+          ADD
+        </div>
+      </button>
+    </div>
+  </div>
 
-    <div id='visContainer' style='height: 100vh;'></div>
-  </body>
+  <div id='visContainer' style='height: 100vh;'></div>
+</body>
+
 </html>

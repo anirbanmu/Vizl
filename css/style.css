@@ -3,7 +3,8 @@
   font-family: "FontAwesome", sans-serif;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   margin: 0;
@@ -25,97 +26,142 @@ html, body {
   height: 100%;
 }
 
-#topbar {
-  margin: 0;
-  font-size: 1.24em;
-  padding: 0.8em;
-  display: flex;
-  z-index: 4;
+@import url(http://weloveiconfonts.com/api/?family=fontawesome);
+
+/* fontawesome */
+
+[class*="fontawesome-"]:before {
+  font-family: 'FontAwesome', sans-serif;
 }
 
-#menu {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  margin: 0 0 0 0;
-  padding: 0 0 0 0;
-  list-style: none;
-  display: flex;
-}
-
-li {
-  padding: 0 0.43em 0 0.43em;
-}
-
-#logo {
-  flex: 2;
-  align-self: flex-start;
-  max-width: 7em;
-  font-family: "Raleway", sans-serif;
-}
-
-#feed {
-  width: 90%;
-  margin: 0em auto 0 auto;
+.widget {
+  background: white;
+  min-height: 22em;
+  width: 22em;
+  position: absolute;
+  color: rgba(0, 0, 0, .75);
+  font-family: 'Varela Round', sans-serif;
   display: flex;
   flex-flow: column;
+  transition: all 200ms ease;
+  border: double;
+  border-width: .4em;
+  z-index: 3;
 }
 
-.card {
-  width: 100%;
-  align-self: flex-start;
-  background: none;
-  font-size: 1.24em;
-  display: flex;
-  border: solid;
-  border-width: 0.12em;
-  margin: .41em 0 .41em 0;
-  transition: all 500ms ease
-}
-
-#info {
+.row {
   flex: 1;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+  font-size: 1.24em;
+  min-height: 3em;
+  margin: 0;
+  max-height: 3em;
+  flex-flow: rowrap;
+  background: inherit;
+}
+
+#art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  max-height: none;
+  background: url('http://images.musictimes.com/data/images/full/54304/pusha-t-darkest-before-dawn.jpg?w=775') center;
+  background-size: cover;
+  filter: grayscale(100%);
+  z-index: 1;
+  filter: grayscale(1);
+  -webkit-filter: grayscale(1);
+}
+
+#progressBar {
+  max-height: .24em;
+  background: none;
+  display: inline;
+}
+
+#bar {
+  width: 28%;
+  height: .24em;
+  background: currentColor;
+  transition: all 200ms ease;
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+#playerCtrl {}
+
+.i {
+  transition: all 200ms;
   display: flex;
   justify-content: center;
   align-items: center;
-  text-align: center;
-}
-
-.i {
-  transition: all 200ms ease;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  font-size: 1.2em;
-  width: 1.2em;
-}
-
-.i:hover {
-  cursor: pointer;
+  padding: .64em;
 }
 
 .i:active {
-  color: rgba(0, 0, 0, 0.45);
+  font-size: 85%;
 }
 
-button, button:active, input {
+#trackInfo {
   flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  color: #e74c3c;
-  margin: 0;
   text-align: center;
+  z-index: 3;
+  padding: 0.95fem;
+}
+
+#center,
+#left,
+#right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+input,
+button {
+  color: inherit;
+  flex: 1;
+  margin: 0;
+  outline: none;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  padding: 1em;
 }
 
 input {
-  flex: 3;
-  border-right: solid;
-  border-width: 0.12em;
+  color: inherit;
+  background: rgba(250, 250, 250, .45);
+  text-align: center;
+  flex: 2;
+}
+
+button {
+  background: none;
+}
+
+#test {
+  display: hidden;
+}
+
+#e {
+  padding-left: .32em;
+  padding-right: .32em;
+  background: inherit;
+  overflow: hidden;
+  height: 0em;
+  flex: 1;
+  min-height: 3;
+  max-height: 0;
+  transition: all 500ms;
 }
 
 canvas {
@@ -127,26 +173,5 @@ canvas {
   left: 0;
   margin: 0;
   padding: 0;
-
   transiiton: all 500ms;
-}
-
-#options {
-  min-height: 4em;
-  visibility: hidden;
-  display: none;
-}
-
-#progressBar {
-  width: 24%;
-  height: 1.24em;
-  border: solid;
-  border-width: 0.1em;
-  display: flex;
-}
-
-#bar {
-  margin: 0.12em;
-  background: #e74c3c;
-  transition: all 60ms;
 }
