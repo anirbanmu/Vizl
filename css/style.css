@@ -14,18 +14,6 @@ body {
   overflow-y: hidden;
 }
 
-#container {
-  font-family: "Ubuntu", sans-serif;
-  width: 100%;
-  min-width: 350px;
-  max-width: 1000px;
-  margin: 0 auto 0 auto;
-  color: #e74c3c;
-  z-index: 4;
-  position: relative;
-  height: 100%;
-}
-
 @import url(http://weloveiconfonts.com/api/?family=fontawesome);
 
 /* fontawesome */
@@ -47,6 +35,11 @@ body {
   border: double;
   border-width: .4em;
   z-index: 3;
+
+  bottom: 0;
+  left: 50%;
+  margin-left: -22em;
+  
 }
 
 .row {
