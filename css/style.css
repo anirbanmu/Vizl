@@ -23,27 +23,26 @@ body {
 }
 
 .widget {
-  background: white;
-  min-height: 22em;
+  background: none;
   width: 22em;
   position: absolute;
-  color: rgba(0, 0, 0, .75);
+  color: #FC6042;
   font-family: 'Varela Round', sans-serif;
   display: flex;
   flex-flow: column;
-  transition: all 200ms ease;
-  border: double;
-  border-width: .4em;
+  border: solid;
+  border-width: .09em;
   z-index: 3;
 
   bottom: 0;
   left: 50%;
   transform: translate(-50%,0);
-  transition: all 200ms;
-  opacity: 0.02;
+  opacity: 0.4;
+  transition: all 500ms;
   }
 .widget:hover {
   opacity: 1;
+  -webkit-filter: blur(0px);
 }
 
 .row {
@@ -66,29 +65,34 @@ body {
   height: 100%;
   width: 100%;
   max-height: none;
-  background: url('http://images.musictimes.com/data/images/full/54304/pusha-t-darkest-before-dawn.jpg?w=775') center;
+  ///background: url('http://images.musictimes.com/data/images/full/54304/pusha-t-darkest-before-dawn.jpg?w=775') center;
   background-size: cover;
   filter: grayscale(100%);
   z-index: 1;
   filter: grayscale(1);
   -webkit-filter: grayscale(1);
+  height: 0em;
 }
 
 #progressBar {
-  max-height: .24em;
+  min-height: 0;
+  max-height: .12em;
   background: none;
   display: inline;
+  overflow: hidden;
+  
 }
 
 #bar {
-  width: 28%;
+  width: 4%;
   height: .24em;
   background: currentColor;
   transition: all 200ms ease;
 }
 
 .spacer {
-  flex-grow: 1;
+  flex-grow: 0;
+  height: 0;
 }
 
 #playerCtrl {}
@@ -109,7 +113,7 @@ body {
   flex: 1;
   text-align: center;
   z-index: 3;
-  padding: 0.95fem;
+  padding: 0.95em;
 }
 
 #center,
@@ -136,7 +140,9 @@ button {
 
 input {
   color: inherit;
-  background: rgba(250, 250, 250, .45);
+  background: none;
+  border: solid;
+  border-width: 0.12em;
   text-align: center;
   flex: 2;
 }
