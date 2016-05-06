@@ -17,7 +17,7 @@ html, body {
   font-family: "Ubuntu", sans-serif;
   width: 100%;
   min-width: 350px;
-  max-width: 1000px;
+  max-width: 1300px;
   margin: 0 auto 0 auto;
   color: #e74c3c;
   z-index: 4;
@@ -52,6 +52,7 @@ li {
   flex: 2;
   align-self: flex-start;
   max-width: 7em;
+  max-height: auto;
   font-family: "Raleway", sans-serif;
 }
 
