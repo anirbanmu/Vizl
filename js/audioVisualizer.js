@@ -268,12 +268,13 @@ function chooseRenderer(renderer2D, rendererGL) {
 function AudioVisualizer(audioAnalyser, visContainer) {
     let renderers;
     {
-        const opacities = [0.06, 1.0, 1.0];
-        const filters = ['blur(30px)', 'blur(1px)', ''];
+        const opacities = [0.06, 0.5, 1.0, 1.0];
+        const filters = ['blur(30px)', '', 'blur(1px)', ''];
         const rendererTypes = [CanvasRenderer2D,
+                               chooseRenderer(null, FrequencyBackgroundRendererGL.bind(null, audioAnalyser)),
                                chooseRenderer(TimeDomainRenderer2D.bind(null, audioAnalyser), TimeDomainRendererGL.bind(null, audioAnalyser)),
                                chooseRenderer(FrequencyDomainRenderer2D.bind(null, audioAnalyser), FrequencyDomainRendererGL.bind(null, audioAnalyser))];
-        renderers = createVisualizationRenderers(visContainer, opacities, filters, rendererTypes, 3);
+        renderers = createVisualizationRenderers(visContainer, opacities, filters, rendererTypes, 4);
     }
 
     let visualizationPaused = true;
@@ -301,9 +302,10 @@ function AudioVisualizer(audioAnalyser, visContainer) {
     this.startVisualization = function() {
         visualizationPaused = false;
 
-        repeatUntilPaused(function() { renderers[1].renderVisual(); });
+        repeatUntilPaused(function() { renderers[2].renderVisual(); });
         repeatUntilPaused(function() {
-            renderers[2].renderVisual();
+            renderers[1].renderVisual();
+            renderers[3].renderVisual();
             frequencyBasedVisualizations([renderers[0], renderers[2]], audioAnalyser.getFrequencyData(), audioAnalyser.minDb, audioAnalyser.maxDb);
         });
     };
@@ -314,7 +316,7 @@ function AudioVisualizer(audioAnalyser, visContainer) {
 
     this.onResize = function() {
         renderers.forEach(function(canvas) {
-            canvas.resize(visContainer[0].clientWidth, visContainer[0].clientHeight);
+            canvas.resize(window.innerWidth, window.innerHeight);
             if (canvas.redraw) {
                 canvas.redraw();
             }
