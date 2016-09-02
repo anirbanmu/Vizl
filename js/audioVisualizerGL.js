@@ -301,7 +301,7 @@ const freqBarsFragShader = `
         }
 
         gl_FragColor = getColor(radius, vec2(barRadii[0].x, barRadii[FREQUENCY_BAR_DIVS - 1].y));
-        gl_FragColor = applyRadialEdgeTransparency(gl_FragColor, radius, radii);
+        gl_FragColor = applyRadialEdgeTransparency(gl_FragColor, radius, vec2(innerRadius, outerRadius));
         gl_FragColor = applyBarEdgeTransparency(gl_FragColor, pos, angles);
     }
 `;
@@ -422,7 +422,7 @@ class FrequencyDomainRendererGL extends CanvasRendererGL {
     }
 
     resize(w, h) {
-        super.resize(w * 4, h * 4);
+        super.resize(Math.trunc(w * 1.25), Math.trunc(h * 1.25));
 
         const center = this.center();
         this.context.uniform2fv(this.glLocations['center'], new Float32Array([center.x, center.y]));
@@ -567,7 +567,7 @@ class FrequencyBackgroundRendererGL extends CanvasRendererGL {
     }
 
     resize(w, h) {
-        super.resize(w * 4, h * 4);
+        super.resize(w, h);
 
         const center = this.center();
         //this.context.uniform2fv(this.glLocations['center'], new Float32Array([center.x, center.y]));
