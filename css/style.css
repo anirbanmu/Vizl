@@ -6,148 +6,6 @@
 * {
     margin: 0;
 }
-
-html, body {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background: linear-gradient(45deg, #2c3e50, #1d1d1d);
-  background-attachment: fixed;
-}
-
-a {
-  color: #e74c3c;
-}
-
-a:visited {
-}
-
-#container {
-  font-family: "Ubuntu", sans-serif;
-  width: 100%;
-  min-width: 350px;
-  max-width: 1300px;
-  margin: 0 auto -0.7em;
-  color: #e74c3c;
-  z-index: 4;
-  position: relative;
-  height: 100%;
-  min-height: 100%;
-  height: auto !important;
-}
-
-.footer {
-  font-family: "Ubuntu", sans-serif;
-  font-size: 0.7em;
-  text-align: center;
-  color: #e74c3c;
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-  transition: all 60ms;
-  z-index: 4;
-  opacity: 0.2;
-}
-
-.footer:hover {
-  opacity: 1;
-}
-
-#topbar {
-  margin: 0;
-  font-size: 1.24em;
-  padding: 0.8em;
-  display: flex;
-  z-index: 4;
-}
-
-#menu {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  margin: 0 0 0 0;
-  padding: 0 0 0 0;
-  list-style: none;
-  display: flex;
-}
-
-li {
-  padding: 0 0.43em 0 0.43em;
-}
-
-#logo {
-  flex: 2;
-  align-self: flex-start;
-  max-width: 7em;
-  max-height: auto;
-  font-family: "Raleway", sans-serif;
-}
-
-#feed {
-  width: 90%;
-  margin: 0em auto 0 auto;
-  display: flex;
-  flex-flow: column;
-}
-
-.card {
-  width: 100%;
-  align-self: flex-start;
-  background: none;
-  font-size: 1.24em;
-  display: flex;
-  border: solid;
-  border-width: 0.12em;
-  margin: .41em 0 .41em 0;
-  transition: all 500ms ease
-}
-
-#info {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.i {
-  transition: all 200ms ease;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  font-size: 1.2em;
-  width: 1.2em;
-}
-
-.i:hover {
-  cursor: pointer;
-}
-
-.i:active {
-  color: rgba(0, 0, 0, 0.45);
-}
-
-button, button:active, input {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  color: #e74c3c;
-  margin: 0;
-  text-align: center;
-}
-
-input {
-  flex: 3;
-  border-right: solid;
-  border-width: 0.12em;
-}
-
 canvas {
   position: fixed;
   z-index: 1;
@@ -160,23 +18,85 @@ canvas {
 
   transiiton: all 500ms;
 }
-
-#options {
-  min-height: 4em;
-  visibility: hidden;
-  display: none;
+html, body {
+  margin: 0 0 0 0;
+  background: #424759;
 }
-
-#progressBar {
-  width: 24%;
-  height: 1.24em;
+#container {
+  position: absolute;
+  left: 2vw;
+  top: 0;
+  height: 100vh;
+  width: 60vw;
+  max-width: 600px;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+  color: #e74c3c;
+  font-family: 'Raleway', sans-serif;
+  z-index: 8;
+}
+#top {
+  max-height: 3em;
+  line-height: 3em;
+  padding: 0 12px 0 12px;
+  flex: 1;
+  margin-top: 12px;
+  margin-bottom: 12px;
   border: solid;
-  border-width: 0.1em;
+  border-width: 1px;
+  display: flex;
+}
+#bottom {
+  flex-grow: 1;
+  margin-bottom: 12px;
+  padding: 6px;
+  border: solid;
+  border-width: 1px;
+  display: flex;
+  flex-direction: column;
+}
+#feed {
+  flex: 1;
+}
+#top ul {
+  list-style: none;
+  flex: 1;
+  text-align: right;
+  
+}
+#top ul li {
+  display: inline;
+  padding: 0 6px 0 6px;
+}
+#logo {
+  display: inline;
+}
+#ui_bottom_container {
   display: flex;
 }
 
-#bar {
-  margin: 0.12em;
-  background: #e74c3c;
-  transition: all 60ms;
+#urlInputBar {
+  flex: 4;
+}
+#streamSubmit {
+  flex: 1;
+}
+#urlInputBar, streamSubmit {
+  line-height: 3em;
+  background: none;
+  background: none;
+  border: solid;
+  border-color: #e74c3c;
+  border-width: 1px;
+  color: inherit;
+  text-align: center;
+  padding: 0 12px 0 12px;
+}
+button {
+  background: none;
+  border: solid;
+  border-color: #e74c3c;
+  border-width: 1px;
+  color: inherit;
 }
