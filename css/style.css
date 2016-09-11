@@ -32,37 +32,40 @@ html, body {
   min-width: 400px;
   display: flex;
   flex-direction: column;
-  color: #e74c3c;
+  color: rgba(0,0,0,.75);
   font-family: 'Raleway', sans-serif;
   z-index: 8;
-
 }
 #top {
   max-height: 3em;
   line-height: 3em;
   padding: 0 12px 0 12px;
-  flex: 1;
   margin-top: 12px;
-  margin-bottom: 12px;
-  border: solid;
-  border-width: 1px;
   display: flex;
-  box-shadow: 0px 0px 60px rgba(0,0,0,.25);
-
+  background: #EEEEEE;
+  z-index: 9;  
+}
+#ui_top_container {
+  display: flex;
+  width: 100%;
+  border-bottom: solid;
+  border-width: 1px;
+  border-color: rgba(0,0,0,.25);
+  padding: 0 12px 0 12px;
+  max-height: 3em;
 }
 #bottom {
   flex-grow: 1;
   margin-bottom: 12px;
-  padding: 6px;
-  border: solid;
-  border-width: 1px;
+  padding: 12px;
+  padding-bottom: 0;
   display: flex;
   flex-direction: column;
   opacity: 0;
   transition: all 300ms ease-out;
   transition-delay: 1s;
   box-shadow: 0px 0px 40px rgba(0,0,0,.25);
-
+  background: #EEEEEE;
   
 }
 #bottom:hover {
@@ -71,7 +74,7 @@ html, body {
 }
 #feed {
   flex: 1;
-  padding: 12px;
+  padding: 24px;
 }
 #top ul {
   list-style: none;
@@ -85,41 +88,56 @@ html, body {
 }
 #logo {
   display: inline;
+  font-weight: bold;
+  
 }
 #ui_bottom_container {
   display: flex;
+  border-top: solid;
+  border-color: rgba(0,0,0,.25);
+  border-width: 1px;
+  
 }
 
 #urlInputBar {
   flex: 4;
+  border: none;
 }
 #streamSubmit {
   flex: 1;
+  border: none;
+  background: #DADFE1;
+  border-left: solid;
+  border-width: 1px;
+  border-color: inherit;
 }
 #urlInputBar, #streamSubmit {
   line-height: 3em;
   background: none;
-  background: none;
-  border: solid;
-  border-color: #e74c3c;
-  border-width: 1px;
-  color: inherit;
   text-align: center;
   padding: 0 12px 0 12px;
-}
-button {
+} 
+button, .i {
   background: none;
-  border: solid;
-  border-color: #e74c3c;
-  border-width: 1px;
-  color: inherit;
+  color: #F22613;
+  margin: 6px;
+}
+.i:focus {
+  outline: none;
+}
+.i:active {
+  font-weight: bold;
+  
 }
 .t{
   font-size: 1.4em;
 }
 #trackInfo {
   text-align: center;
+  list-style: none;
+  margin-top: 24px;
+  font-weight: 100;
+  font-size: 1.12em;
+  color: rgba(0,0,0,.70);
+  text-align: center;
 }
-
-
-
