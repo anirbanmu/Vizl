@@ -70,6 +70,7 @@ html, body {
   box-shadow: 0px 0px 40px rgba(0,0,0,.25);
     background: #F5F7F9;
     background: linear-gradient(45deg, rgb(247, 224, 227), #F5F7F9);
+  transition: all 400ms ease-out;
 
   z-index: 5;
   
@@ -81,6 +82,7 @@ html, body {
 #feed {
   flex: 1;
   padding: 24px;
+  transition: 200ms ease-out;
 }
 #top ul {
   list-style: none;
@@ -127,7 +129,7 @@ html, body {
 } 
 button, .i{
   background: none;
-  color: #ff4e37;
+  color: #D2527F;
   margin: 6px;
 }
 .i,#urlInputBar:focus {
@@ -148,4 +150,8 @@ button, .i{
   font-size: 1.12em;
   color: rgba(0,0,0,.70);
   text-align: center;
+}
+#options {
+  overflow-y: hidden;
+  height: 0em;
 }
