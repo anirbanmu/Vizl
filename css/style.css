@@ -21,6 +21,8 @@ canvas {
 html, body {
   margin: 0 0 0 0;
   background: #2c3e50;
+  background: linear-gradient(to right, #D2527F , #E26A6A);
+
 }
 #container {
   position: absolute;
@@ -42,32 +44,36 @@ html, body {
   padding: 0 12px 0 12px;
   margin-top: 12px;
   display: flex;
-  background: #EEEEEE;
-  z-index: 9;  
+  background: #F5F7F9;
+  z-index: 6;  
+  box-shadow: 0px 0px 40px rgba(0,0,0,.1);
+  border-bottom: solid;
+  border-width: 1px;
+  border-color: rgba(0,0,0,.25);
+
 }
 #ui_top_container {
   display: flex;
   width: 100%;
-  border-bottom: solid;
-  border-width: 1px;
-  border-color: rgba(0,0,0,.25);
   padding: 0 12px 0 12px;
   max-height: 3em;
 }
 #bottom {
   flex-grow: 1;
   margin-bottom: 12px;
-  padding: 12px;
   padding-bottom: 0;
   display: flex;
   flex-direction: column;
   opacity: 0;
-  transition: all 300ms ease-out;
+  transition: all 100ms ease-out;
   transition-delay: 1s;
   box-shadow: 0px 0px 40px rgba(0,0,0,.25);
-  background: #EEEEEE;
+    background: #F5F7F9;
+    background: linear-gradient(45deg, rgb(247, 224, 227), #F5F7F9);
+
+  z-index: 5;
   
-}
+}  
 #bottom:hover {
   opacity: 1;
   transition-delay: 0s;
@@ -96,12 +102,13 @@ html, body {
   border-top: solid;
   border-color: rgba(0,0,0,.25);
   border-width: 1px;
-  
+  background: #F5F7F9;
 }
 
 #urlInputBar {
   flex: 4;
   border: none;
+  opacity: 0.65;
 }
 #streamSubmit {
   flex: 1;
@@ -110,6 +117,7 @@ html, body {
   border-left: solid;
   border-width: 1px;
   border-color: inherit;
+  
 }
 #urlInputBar, #streamSubmit {
   line-height: 3em;
@@ -117,12 +125,12 @@ html, body {
   text-align: center;
   padding: 0 12px 0 12px;
 } 
-button, .i {
+button, .i{
   background: none;
-  color: #F22613;
+  color: #ff4e37;
   margin: 6px;
 }
-.i:focus {
+.i,#urlInputBar:focus {
   outline: none;
 }
 .i:active {
