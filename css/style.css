@@ -142,6 +142,10 @@ button, .i{
 .t{
   font-size: 1.4em;
 }
+#options {
+  height: 0;
+  overflow: hidden;
+}
 #trackInfo {
   text-align: center;
   list-style: none;
@@ -149,16 +153,12 @@ button, .i{
   font-weight: 100;
   font-size: 1.12em;
   color: rgba(0,0,0,.70);
-  text-align: center;
+  text-align: center;*/
 }
-#options {
-  overflow-y: hidden;
-  height: 0em;
-}
-#top,#ui_bottom_container {
+/* #top,#ui_bottom_container {
   background: #2A242C;
   background: linear-gradient(65deg,#2A242C,#40071b);
   background: #40071b;
   color: #ffffff;
   border: none;
-}
+} */
