@@ -155,3 +155,10 @@ button, .i{
   overflow-y: hidden;
   height: 0em;
 }
+#top,#ui_bottom_container {
+  background: #2A242C;
+  background: linear-gradient(65deg,#2A242C,#40071b);
+  background: #40071b;
+  color: #ffffff;
+  border: none;
+}
