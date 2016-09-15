@@ -64,20 +64,20 @@ html, body {
   padding-bottom: 0;
   display: flex;
   flex-direction: column;
-  opacity: 0;
   transition: all 100ms ease-out;
-  transition-delay: 1s;
   box-shadow: 0px 0px 40px rgba(0,0,0,.25);
     background: #F5F7F9;
     background: linear-gradient(45deg, rgb(247, 224, 227), #F5F7F9);
-  transition: all 400ms ease-out;
-
   z-index: 5;
-  
+  transform: scale(.80,.80);
+  transition: all 200ms ease-out;
+  transition-delay: 1s;
+  opacity: 0;
 }  
 #bottom:hover {
   opacity: 1;
   transition-delay: 0s;
+  transform: scale(1,1);
 }
 #feed {
   flex: 1;
@@ -162,3 +162,10 @@ button, .i{
   color: #ffffff;
   border: none;
 } */
+#top  {
+  background: #2C3E50;
+  color: white;
+}
+.i {
+  color: white;
+}
