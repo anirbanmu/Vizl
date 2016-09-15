@@ -166,6 +166,6 @@ button, .i{
   background: #2C3E50;
   color: white;
 }
-.i {
+.i:not(#streamSubmit) {
   color: white;
 }
