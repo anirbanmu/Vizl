@@ -50,7 +50,6 @@ html, body {
   border-bottom: solid;
   border-width: 1px;
   border-color: rgba(0,0,0,.25);
-
 }
 #ui_top_container {
   display: flex;
@@ -105,6 +104,7 @@ html, body {
   border-color: rgba(0,0,0,.25);
   border-width: 1px;
   background: #F5F7F9;
+  
 }
 
 #urlInputBar {
@@ -119,7 +119,8 @@ html, body {
   border-left: solid;
   border-width: 1px;
   border-color: inherit;
-  
+  color: #2c3e50;
+  font-weight: bold;
 }
 #urlInputBar, #streamSubmit {
   line-height: 3em;
@@ -129,7 +130,6 @@ html, body {
 } 
 button, .i{
   background: none;
-  color: #D2527F;
   margin: 6px;
 }
 .i,#urlInputBar:focus {
@@ -192,7 +192,7 @@ button, .i{
   position: fixed;
   width: 100%;
   height: 100%;
-  opacity: .65;
+  opacity: .5;
 }
 .footer {
   position: fixed;
@@ -203,4 +203,8 @@ button, .i{
   right: 0;
   color: rgba(255, 255, 255, 0.47);
   font-size: .65em;
+  z-index: 5;
+}
+#top, #bottom {
+  box-shadow: 8px 0px 15px rgba(0, 0, 0, 0.15);
 }
