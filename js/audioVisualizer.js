@@ -268,8 +268,8 @@ function chooseRenderer(renderer2D, rendererGL) {
 function AudioVisualizer(audioAnalyser, visContainer) {
     let renderers;
     {
-        const opacities = [0.06, 0.5, 1.0, 1.0];
-        const filters = ['blur(30px)', '', 'blur(1px)', ''];
+        const opacities = [1.0, 0.5, 1.0, 1.0];
+        const filters = ['blur(10px)', '', 'blur(1px)', ''];
         const rendererTypes = [CanvasRenderer2D,
                                chooseRenderer(null, FrequencyBackgroundRendererGL.bind(null, audioAnalyser)),
                                chooseRenderer(TimeDomainRenderer2D.bind(null, audioAnalyser), TimeDomainRendererGL.bind(null, audioAnalyser)),
