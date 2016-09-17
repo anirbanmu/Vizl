@@ -47,7 +47,7 @@ html, body {
   border-bottom: solid;
   border-width: 1px;
   border-color: rgba(0,0,0,.25);
-
+  
 }
 #ui_top_container {
   display: flex;
@@ -67,6 +67,7 @@ html, body {
   transition: all 200ms ease-out;
   transition-delay: 1s;
   opacity: 0;
+
 }  
 #bottom:hover {
   opacity: 1;
@@ -105,6 +106,12 @@ html, body {
 #ui_bottom_container {
   display: flex;
 
+}
+.entry {
+  border-bottom: solid;
+  border-width: 1px;
+  border-color: rgba(0, 0, 0, 0.08);
+  padding-bottom: 6px;
 }
 
 #urlInputBar {
