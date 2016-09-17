@@ -39,11 +39,8 @@ html, body {
   z-index: 8;
 }
 #top {
-  max-height: 3em;
   line-height: 3em;
-  padding: 0 12px 0 12px;
   margin-top: 0px;
-  display: flex;
   background: #F5F7F9;
   z-index: 6;  
   box-shadow: 0px 0px 40px rgba(0,0,0,.1);
@@ -55,8 +52,6 @@ html, body {
 #ui_top_container {
   display: flex;
   width: 100%;
-  padding: 0 12px 0 12px;
-  max-height: 3em;
 }
 #bottom {
   flex-grow: 1;
@@ -85,25 +80,31 @@ html, body {
 }
 #top ul {
   list-style: none;
-  flex: 1;
-  text-align: right;
-  
+  display: flex;
+  flex: .6;
+  align-content: center;
+  align-items: center;
+  padding: 0;
 }
 #top ul li {
-  display: inline;
-  padding: 0 6px 0 6px;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  text-align: center;
 }
 #logo {
-  display: inline;
+  font-size: 1.3em;
   font-weight: bold;
-  
+  flex: 1;
+  text-align: left;
+  display: flex;
+  align-content: center;
+  align-items: center;
+  margin-left: 6px;
 }
 #ui_bottom_container {
   display: flex;
-  border-top: solid;
-  border-color: rgba(0,0,0,.25);
-  border-width: 1px;
-  background: #F5F7F9;
+
 }
 
 #urlInputBar {
@@ -128,8 +129,6 @@ html, body {
 } 
 button, .i{
   background: none;
-  color: #836967;
-  margin: 6px;
 }
 .i,#urlInputBar:focus {
   outline: none;
@@ -156,15 +155,6 @@ button, .i{
   font-size: 1.12em;
   color: rgba(0,0,0,.70);
   text-align: center;*/
-}
-
-#top {
-  background: #DCC0BC;
-  color: white;
-  border: none;
-}
-.i:not(#streamSubmit) {
-  color: white;
 }
 #playbackCtrl {
   
@@ -205,4 +195,25 @@ button, .i{
   margin: 0 auto 0 auto;
   background-size: cover;
   box-shadow: 0px 0px 15px rgba(44, 62, 80, 0.67);
+}
+#bottom, #top {
+  background: rgba(235, 240, 247, 0.9);
+  background: rgba(253, 227, 167, 0.89);
+  border: none;
+  box-shadow: none;
+}
+.container_i {
+  border-color: rgba(0,0,0,.25);
+  border-width: 1px;
+  background: #F5F7F9;
+  margin: 6px;
+  border-radius: 3px;
+  border: solid;
+  border-width: 1px;
+  border-color: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 0 15px rgba(123, 92, 92, 0.14);
+  color: rgba(21, 20, 20, 0.85);
+}
+.container_i .i {
+  margin: 8px;
 }
