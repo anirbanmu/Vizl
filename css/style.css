@@ -22,6 +22,7 @@ html, body {
   margin: 0 0 0 0;
   background: #2c3e50;
   background: linear-gradient(to right, #D2527F , #E26A6A);
+  overflow: hidden;
 
 }
 #container {
@@ -219,4 +220,8 @@ button, .i{
 }
 .container_i .i {
   margin: 8px;
+}
+#feed {
+  overflow-x: hidden;
+  overflow-y: auto;
 }
