@@ -40,7 +40,6 @@ html, body {
   z-index: 8;
 }
 #top {
-  line-height: 3em;
   margin-top: 0px;
   background: #F5F7F9;
   z-index: 6;  
@@ -125,7 +124,6 @@ html, body {
   
 }
 #urlInputBar, #streamSubmit {
-  line-height: 3em;
   background: none;
   text-align: center;
   padding: 0 12px 0 12px;
@@ -150,14 +148,13 @@ button, .i{
   height: 0;
   overflow: hidden;
 }
-#trackInfo {
-  text-align: center;
+#trackInfo, .ti {
   list-style: none;
   margin-top: 24px;
   font-weight: 100;
   font-size: 1.12em;
   color: rgba(0,0,0,.70);
-  text-align: center;*/
+  text-align: center;
 }
 #playbackCtrl {
   
@@ -217,6 +214,9 @@ button, .i{
   border-color: rgba(0, 0, 0, 0.18);
   box-shadow: 0 0 15px rgba(123, 92, 92, 0.14);
   color: rgba(21, 20, 20, 0.85);
+  line-height: 3em;
+  height: 3em;
+  padding: 6px;
 }
 .container_i .i {
   margin: 8px;
@@ -224,4 +224,7 @@ button, .i{
 #feed {
   overflow-x: hidden;
   overflow-y: auto;
+}
+::-webkit-scrollbar {
+  width: 0px;
 }
