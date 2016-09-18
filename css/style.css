@@ -150,11 +150,11 @@ button, .i{
 }
 #trackInfo, .ti {
   list-style: none;
-  margin-top: 24px;
   font-weight: 100;
   font-size: 1.12em;
   color: rgba(0,0,0,.70);
   text-align: center;
+  line-height: 4em;
 }
 #playbackCtrl {
   
@@ -202,6 +202,7 @@ button, .i{
   background: rgba(253, 227, 167, 0.89);
   border: none;
   box-shadow: none;
+  
 }
 .container_i {
   border-color: rgba(0,0,0,.25);
