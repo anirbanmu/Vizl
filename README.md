@@ -1,4 +1,4 @@
-# Vizl ([live demo](http://anirbanmu.github.io/Vizl/))
+# Vizl ([live demo](http://anirbanmu.com/Vizl/?trackURL=https://soundcloud.com/nocopyrightsounds/alan-walker-fade-ncs-release))
 
 Simple music visualizer via WebAudio. Tested mainly on Chrome.
 
