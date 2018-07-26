@@ -67,12 +67,12 @@ function AudioPlayer(audioElement, playPause, progressBar, trackInfoDisplay) {
     };
 
     this.onPause = function() {
-        playPause.className = 'i fontawesome-play';
+        playPause.className = 'i fas fa-play';
         trackInfoDisplay.textContent = 'Paused';
     };
 
     this.onPlay = function() {
-        playPause.className = 'i fontawesome-pause';
+        playPause.className = 'i fas fa-pause';
         trackInfoDisplay.textContent = trackTitle;
     };
 
