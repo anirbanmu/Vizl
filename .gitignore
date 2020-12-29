@@ -1,0 +1,8 @@
+# Editor configurations
+.vscode/
+
+# NPM
+node_modules/
+
+# Built files
+public/build
