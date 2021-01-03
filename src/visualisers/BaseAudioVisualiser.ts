@@ -1,12 +1,15 @@
-import type AudioAnalysisData from "../AudioAnalysisData";
-import type AudioAnalysisMetadata from "../AudioAnalysisMetadata";
-import type { Vector2d } from "../util";
+import type AudioAnalysisData from '../AudioAnalysisData';
+import type AudioAnalysisMetadata from '../AudioAnalysisMetadata';
+import type { Vector2d } from '../util';
 
 export default abstract class BaseAudioVisualiser {
   private metadata: AudioAnalysisMetadata;
   protected canvas: HTMLCanvasElement;
 
-  constructor(canvasElement: HTMLCanvasElement, analysisMetadata: AudioAnalysisMetadata) {
+  constructor(
+    canvasElement: HTMLCanvasElement,
+    analysisMetadata: AudioAnalysisMetadata
+  ) {
     this.canvas = canvasElement;
     this.metadata = analysisMetadata;
   }

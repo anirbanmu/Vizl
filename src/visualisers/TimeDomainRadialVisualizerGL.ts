@@ -1,9 +1,12 @@
-import type AudioAnalysisData from "../AudioAnalysisData";
-import type AudioAnalysisMetadata from "../AudioAnalysisMetadata";
-import BaseAudioVisualiserGL from "./BaseAudioVisualiserGL";
+import type AudioAnalysisData from '../AudioAnalysisData';
+import type AudioAnalysisMetadata from '../AudioAnalysisMetadata';
+import BaseAudioVisualiserGL from './BaseAudioVisualiserGL';
 
 export default class TimeDomainRadialVisualiserGL extends BaseAudioVisualiserGL {
-  constructor(canvas: HTMLCanvasElement, analysisMetadata: AudioAnalysisMetadata) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    analysisMetadata: AudioAnalysisMetadata
+  ) {
     super(canvas, analysisMetadata);
     this.prepShaders();
     this.resize();
@@ -13,33 +16,62 @@ export default class TimeDomainRadialVisualiserGL extends BaseAudioVisualiserGL 
     super.resize(width, height);
 
     const minCanvasDim = this.minDim();
-    this.gl.uniform2fv(this.uniformLocation('aspectScale'), new Float32Array([minCanvasDim / this.canvas.width, minCanvasDim / this.canvas.height]));
+    this.gl.uniform2fv(
+      this.uniformLocation('aspectScale'),
+      new Float32Array([
+        minCanvasDim / this.canvas.width,
+        minCanvasDim / this.canvas.height,
+      ])
+    );
   }
 
   public render(analysisData: AudioAnalysisData): void {
-    this.updateFloatAttribute(analysisData.timeData, this.gl.DYNAMIC_DRAW, 'magnitude');
+    this.updateFloatAttribute(
+      analysisData.timeData,
+      this.gl.DYNAMIC_DRAW,
+      'magnitude'
+    );
 
-    const baseRadius = 0.20;
+    const baseRadius = 0.2;
     const magnitudeScale = baseRadius * 0.5;
-    const angularIncrement = 2 * Math.PI / analysisData.timeData.length;
+    const angularIncrement = (2 * Math.PI) / analysisData.timeData.length;
 
     this.gl.uniform1f(this.uniformLocation('baseRadius'), baseRadius);
     this.gl.uniform1f(this.uniformLocation('magnitudeScale'), magnitudeScale);
-    this.gl.uniform1f(this.uniformLocation('angularIncrement'), angularIncrement);
+    this.gl.uniform1f(
+      this.uniformLocation('angularIncrement'),
+      angularIncrement
+    );
 
     this.gl.drawArrays(this.gl.LINE_STRIP, 0, analysisData.timeData.length);
 
-    this.gl.uniform1f(this.uniformLocation('angularIncrement'), -angularIncrement);
+    this.gl.uniform1f(
+      this.uniformLocation('angularIncrement'),
+      -angularIncrement
+    );
     this.gl.drawArrays(this.gl.LINE_STRIP, 0, analysisData.timeData.length);
   }
 
   private prepShaders(): void {
-    const vShader = this.compileShader(this.gl.VERTEX_SHADER, scalarToCircularVertShader);
-    const fShader = this.compileShader(this.gl.FRAGMENT_SHADER, trivialColorFragmentShader);
+    const vShader = this.compileShader(
+      this.gl.VERTEX_SHADER,
+      scalarToCircularVertShader
+    );
+    const fShader = this.compileShader(
+      this.gl.FRAGMENT_SHADER,
+      trivialColorFragmentShader
+    );
     this.makeAndUseProgram(vShader, fShader);
 
-    this.updateFloatAttribute(new Float32Array(Array.from(new Array(this.timeFftSize()), (x, i) => i)), this.gl.STATIC_DRAW, 'vertexId');
-    this.gl.uniform4fv(this.uniformLocation('color'), new Float32Array([0.905, 0.298, 0.235, 0.5]));
+    this.updateFloatAttribute(
+      new Float32Array(Array.from(new Array(this.timeFftSize()), (x, i) => i)),
+      this.gl.STATIC_DRAW,
+      'vertexId'
+    );
+    this.gl.uniform4fv(
+      this.uniformLocation('color'),
+      new Float32Array([0.905, 0.298, 0.235, 0.5])
+    );
   }
 }
 

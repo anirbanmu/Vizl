@@ -1,15 +1,21 @@
-import type AudioAnalysisData from "../AudioAnalysisData";
-import type AudioAnalysisMetadata from "../AudioAnalysisMetadata";
-import type { Vector2d } from "../util";
-import { hexToRGB } from "../util";
-import BaseAudioVisualiserGL from "./BaseAudioVisualiserGL";
+import type AudioAnalysisData from '../AudioAnalysisData';
+import type AudioAnalysisMetadata from '../AudioAnalysisMetadata';
+import type { Vector2d } from '../util';
+import { hexToRGB } from '../util';
+import BaseAudioVisualiserGL from './BaseAudioVisualiserGL';
 
 export default class FrequencyDomainRadialVisualiserGL extends BaseAudioVisualiserGL {
   private barDivs = 28;
   private vertCount = 0;
 
-  constructor(canvas: HTMLCanvasElement, analysisMetadata: AudioAnalysisMetadata) {
-    super(canvas, { ...analysisMetadata, frequencyBinCount: Math.floor(0.74 * analysisMetadata.frequencyBinCount) });
+  constructor(
+    canvas: HTMLCanvasElement,
+    analysisMetadata: AudioAnalysisMetadata
+  ) {
+    super(canvas, {
+      ...analysisMetadata,
+      frequencyBinCount: Math.floor(0.74 * analysisMetadata.frequencyBinCount),
+    });
 
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);
     this.gl.enable(this.gl.BLEND);
@@ -22,23 +28,47 @@ export default class FrequencyDomainRadialVisualiserGL extends BaseAudioVisualis
     super.resize(width, height);
 
     const center = this.center();
-    this.gl.uniform2fv(this.uniformLocation('center'), new Float32Array([center.x, center.y]));
-    this.gl.uniform2fv(this.uniformLocation('dimensions'), new Float32Array([this.canvas.width, this.canvas.height]));
+    this.gl.uniform2fv(
+      this.uniformLocation('center'),
+      new Float32Array([center.x, center.y])
+    );
+    this.gl.uniform2fv(
+      this.uniformLocation('dimensions'),
+      new Float32Array([this.canvas.width, this.canvas.height])
+    );
   }
 
   public render(analysisData: AudioAnalysisData): void {
-    this.gl.uniform4fv(this.uniformLocation('magnitudes[0]'), analysisData.frequencyData);
+    this.gl.uniform4fv(
+      this.uniformLocation('magnitudes[0]'),
+      analysisData.frequencyData
+    );
 
     {
       const scalingDim = this.minDim() / 2;
-      const freqIntensityFactor = freqIntensityMultipler(analysisData.frequencyData, this.minDb(), this.maxDb());
-      const lineWidths = { x: 2, y: pickGapUpperBound(2, this.barDivs, scalingDim * 0.20) };
+      const freqIntensityFactor = freqIntensityMultipler(
+        analysisData.frequencyData,
+        this.minDb(),
+        this.maxDb()
+      );
+      const lineWidths = {
+        x: 2,
+        y: pickGapUpperBound(2, this.barDivs, scalingDim * 0.2),
+      };
 
       const minRadiusPortion = 0.15;
-      const baseRadius = scalingDim * (minRadiusPortion + freqIntensityFactor * (0.50 - minRadiusPortion));
+      const baseRadius =
+        scalingDim *
+        (minRadiusPortion + freqIntensityFactor * (0.5 - minRadiusPortion));
       const maxRadius = baseRadius + scalingDim * 0.35;
-      let bars = generateRadialBars(this.barDivs, lineWidths, { x: baseRadius, y: maxRadius });
-      this.gl.uniform2fv(this.uniformLocation('barRadii[0]'), new Float32Array(bars));
+      let bars = generateRadialBars(this.barDivs, lineWidths, {
+        x: baseRadius,
+        y: maxRadius,
+      });
+      this.gl.uniform2fv(
+        this.uniformLocation('barRadii[0]'),
+        new Float32Array(bars)
+      );
     }
 
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.vertCount);
@@ -46,28 +76,71 @@ export default class FrequencyDomainRadialVisualiserGL extends BaseAudioVisualis
 
   private prepShaders(): void {
     const colors = [
-      ...hexToRGB(0x00D1B1), 0.0, 0.0,
-      ...hexToRGB(0xABE300), 0.7, 0.2,
-      ...hexToRGB(0xFF8400), 1.0, 0.65,
-      ...hexToRGB(0xFF2D00), 1.0, 1.0
+      ...hexToRGB(0x00d1b1),
+      0.0,
+      0.0,
+      ...hexToRGB(0xabe300),
+      0.7,
+      0.2,
+      ...hexToRGB(0xff8400),
+      1.0,
+      0.65,
+      ...hexToRGB(0xff2d00),
+      1.0,
+      1.0,
     ];
 
-    const vShader = this.compileShader(this.gl.VERTEX_SHADER, this.templateShader(aspectCorrectingVertShader, { 'FREQUENCY_BARS': this.frequencyBinCount(), 'FREQUENCY_BAR_DIVS': this.barDivs }));
-    const fShader = this.compileShader(this.gl.FRAGMENT_SHADER, this.templateShader(freqBarsFragShader, { 'FREQUENCY_BAR_DIVS': this.barDivs, 'FREQUENCY_BAR_COLORS': colors.length }));
+    const vShader = this.compileShader(
+      this.gl.VERTEX_SHADER,
+      this.templateShader(aspectCorrectingVertShader, {
+        FREQUENCY_BARS: this.frequencyBinCount(),
+        FREQUENCY_BAR_DIVS: this.barDivs,
+      })
+    );
+    const fShader = this.compileShader(
+      this.gl.FRAGMENT_SHADER,
+      this.templateShader(freqBarsFragShader, {
+        FREQUENCY_BAR_DIVS: this.barDivs,
+        FREQUENCY_BAR_COLORS: colors.length,
+      })
+    );
 
     this.makeAndUseProgram(vShader, fShader);
     {
-      let vertProperties = generateVertexAttributes(this.frequencyBinCount(), 0.1, this.barDivs);
-      this.updateFloatAttribute(new Float32Array(vertProperties['indices']), this.gl.STATIC_DRAW, 'index', 3);
-      this.updateFloatAttribute(new Float32Array(vertProperties['angles']), this.gl.STATIC_DRAW, 'barAngles', 2);
+      let vertProperties = generateVertexAttributes(
+        this.frequencyBinCount(),
+        0.1,
+        this.barDivs
+      );
+      this.updateFloatAttribute(
+        new Float32Array(vertProperties['indices']),
+        this.gl.STATIC_DRAW,
+        'index',
+        3
+      );
+      this.updateFloatAttribute(
+        new Float32Array(vertProperties['angles']),
+        this.gl.STATIC_DRAW,
+        'barAngles',
+        2
+      );
       this.vertCount = vertProperties['vertexCount'];
     }
 
-    this.gl.uniform2fv(this.uniformLocation('minMaxDb'), new Float32Array([this.minDb(), this.maxDb()]));
+    this.gl.uniform2fv(
+      this.uniformLocation('minMaxDb'),
+      new Float32Array([this.minDb(), this.maxDb()])
+    );
 
     for (let i = 0; i < colors.length; i += 5) {
-      this.gl.uniform4fv(this.uniformLocation('colors[' + Math.floor(i / 5) + '].color'), new Float32Array(colors.slice(i, i + 4)));
-      this.gl.uniform1f(this.uniformLocation('colors[' + Math.floor(i / 5) + '].colorStop'), colors[i + 4]);
+      this.gl.uniform4fv(
+        this.uniformLocation('colors[' + Math.floor(i / 5) + '].color'),
+        new Float32Array(colors.slice(i, i + 4))
+      );
+      this.gl.uniform1f(
+        this.uniformLocation('colors[' + Math.floor(i / 5) + '].colorStop'),
+        colors[i + 4]
+      );
     }
   }
 }
@@ -76,29 +149,46 @@ function normalizeFreqMagnitude(mag: number, min: number, max: number): number {
   return Math.min(1.0, Math.max(0.0, (mag - min) / (max - min)));
 }
 
-function freqIntensityMultipler(frequencyData: Float32Array, min: number, max: number): number {
+function freqIntensityMultipler(
+  frequencyData: Float32Array,
+  min: number,
+  max: number
+): number {
   let rMultiplier = 0;
   for (let i = 0; i < frequencyData.length / 4; i++) {
     rMultiplier += frequencyData[i];
   }
-  return normalizeFreqMagnitude(rMultiplier / (frequencyData.length / 4), min, max);
+  return normalizeFreqMagnitude(
+    rMultiplier / (frequencyData.length / 4),
+    min,
+    max
+  );
 }
 
-function lineWidthIncrement(lineWidths: Vector2d, segmentCount: number): number {
+function lineWidthIncrement(
+  lineWidths: Vector2d,
+  segmentCount: number
+): number {
   return (lineWidths.y - lineWidths.x) / segmentCount;
 }
 
-function generateRadialBars(barCount: number, gapWidthRange: Vector2d, radii: Vector2d): Array<number> {
+function generateRadialBars(
+  barCount: number,
+  gapWidthRange: Vector2d,
+  radii: Vector2d
+): Array<number> {
   // Not including segmented gaps
   const maxLength = radii.y - radii.x;
 
-  const radialIncrement = 0.05 * maxLength / barCount;
-  const radialMultiplier = 2 * (maxLength - barCount * radialIncrement) / (barCount * (barCount - 1));
+  const radialIncrement = (0.05 * maxLength) / barCount;
+  const radialMultiplier =
+    (2 * (maxLength - barCount * radialIncrement)) /
+    (barCount * (barCount - 1));
 
   const lineWidthInc = lineWidthIncrement(gapWidthRange, barCount);
 
   let lastOuterRadius = radii.x;
-  let bars = []
+  let bars = [];
   for (let i = 0; i < barCount; ++i) {
     const innerRadius = lastOuterRadius;
     const outerRadius = innerRadius + (radialIncrement + radialMultiplier * i);
@@ -108,20 +198,35 @@ function generateRadialBars(barCount: number, gapWidthRange: Vector2d, radii: Ve
   return bars;
 }
 
-function pickGapUpperBound(gapRangeStart: number, segmentCount: number, length: number): number {
-  return gapRangeStart + 2 * (length - segmentCount * gapRangeStart) / (segmentCount - 1);
+function pickGapUpperBound(
+  gapRangeStart: number,
+  segmentCount: number,
+  length: number
+): number {
+  return (
+    gapRangeStart +
+    (2 * (length - segmentCount * gapRangeStart)) / (segmentCount - 1)
+  );
 }
 
-function generateVertexAttributes(divisions: number, gapPercent: number, barCount: number): { indices: Array<number>, angles: Array<number>, vertexCount: number } {
-  const angularIncrement = -2 * Math.PI / divisions;
+function generateVertexAttributes(
+  divisions: number,
+  gapPercent: number,
+  barCount: number
+): { indices: Array<number>; angles: Array<number>; vertexCount: number } {
+  const angularIncrement = (-2 * Math.PI) / divisions;
   const angleOffset = angularIncrement * gapPercent;
 
-  let indices = [], angles = [];
+  let indices = [],
+    angles = [];
   for (let i = 0; i < divisions; i++) {
     for (let j = 0; j < barCount; j++) {
       for (let k = 0; k < 6; k++) {
         indices.push(i, j, k);
-        angles.push(angularIncrement * i + angleOffset, angularIncrement * (i + 1) - angleOffset);
+        angles.push(
+          angularIncrement * i + angleOffset,
+          angularIncrement * (i + 1) - angleOffset
+        );
       }
     }
   }

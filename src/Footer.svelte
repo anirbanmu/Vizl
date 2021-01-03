@@ -16,8 +16,10 @@
 <footer>
   <p>
     Source @
-    <a href="https://github.com/anirbanmu/Vizl">Github</a>. Coded by
-    <a href="https://github.com/anirbanmu">Anirban Mukhopadhyay</a>. Design by
+    <a href="https://github.com/anirbanmu/Vizl">Github</a>. Code &
+    visualizations by
+    <a href="https://github.com/anirbanmu">Anirban Mukhopadhyay</a>. Layout help
+    by
     <a href="https://www.flickr.com/photos/dickbaker">Dick Baker</a>. Logo
     contributed by a cup of noodles.
   </p>

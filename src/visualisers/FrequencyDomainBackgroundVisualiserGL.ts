@@ -1,10 +1,16 @@
-import type AudioAnalysisData from "../AudioAnalysisData";
-import type AudioAnalysisMetadata from "../AudioAnalysisMetadata";
-import BaseAudioVisualiserGL from "./BaseAudioVisualiserGL";
+import type AudioAnalysisData from '../AudioAnalysisData';
+import type AudioAnalysisMetadata from '../AudioAnalysisMetadata';
+import BaseAudioVisualiserGL from './BaseAudioVisualiserGL';
 
 export default class FrequencyDomainBackgroundVisualiserGL extends BaseAudioVisualiserGL {
-  constructor(canvas: HTMLCanvasElement, analysisMetadata: AudioAnalysisMetadata) {
-    super(canvas, { ...analysisMetadata, frequencyBinCount: Math.trunc(analysisMetadata.frequencyBinCount * 0.725) });
+  constructor(
+    canvas: HTMLCanvasElement,
+    analysisMetadata: AudioAnalysisMetadata
+  ) {
+    super(canvas, {
+      ...analysisMetadata,
+      frequencyBinCount: Math.trunc(analysisMetadata.frequencyBinCount * 0.725),
+    });
 
     this.gl.blendFuncSeparate(
       this.gl.SRC_ALPHA,
@@ -27,18 +33,25 @@ export default class FrequencyDomainBackgroundVisualiserGL extends BaseAudioVisu
   }
 
   public render(analysisData: AudioAnalysisData): void {
-    this.gl.uniform4fv(this.uniformLocation('magnitudes[0]'), analysisData.frequencyData);
+    this.gl.uniform4fv(
+      this.uniformLocation('magnitudes[0]'),
+      analysisData.frequencyData
+    );
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
   }
 
   private prepShaders(): void {
     const vShader = this.compileShader(
       this.gl.VERTEX_SHADER,
-      this.templateShader(quadVertShader, { FREQUENCY_BARS: this.frequencyBinCount() })
+      this.templateShader(quadVertShader, {
+        FREQUENCY_BARS: this.frequencyBinCount(),
+      })
     );
     const fShader = this.compileShader(
       this.gl.FRAGMENT_SHADER,
-      this.templateShader(freqBackgroundFragShader, { FREQUENCY_BARS: this.frequencyBinCount() })
+      this.templateShader(freqBackgroundFragShader, {
+        FREQUENCY_BARS: this.frequencyBinCount(),
+      })
     );
     this.makeAndUseProgram(vShader, fShader);
 

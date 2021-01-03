@@ -1,1 +1,3 @@
-export default interface ShaderAttributeLocations { [propName: string]: number };
+export default interface ShaderAttributeLocations {
+  [propName: string]: number;
+}

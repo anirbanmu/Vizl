@@ -1,14 +1,17 @@
-import type AudioAnalysisMetadata from "../AudioAnalysisMetadata";
-import BaseAudioVisualiser from "./BaseAudioVisualiser";
-import type ShaderAttributeLocations from "./ShaderAttributeLocations";
-import type ShaderUniformLocations from "./ShaderUniformLocations";
+import type AudioAnalysisMetadata from '../AudioAnalysisMetadata';
+import BaseAudioVisualiser from './BaseAudioVisualiser';
+import type ShaderAttributeLocations from './ShaderAttributeLocations';
+import type ShaderUniformLocations from './ShaderUniformLocations';
 
 export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser {
   protected gl: WebGLRenderingContext;
   private attributeLocations: ShaderAttributeLocations = {};
   private uniformLocations: ShaderUniformLocations = {};
 
-  constructor(canvas: HTMLCanvasElement, analysisMetadata: AudioAnalysisMetadata) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    analysisMetadata: AudioAnalysisMetadata
+  ) {
     super(canvas, analysisMetadata);
 
     this.gl = this.canvas.getContext('webgl');
@@ -33,7 +36,10 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
     return s;
   }
 
-  protected makeAndUseProgram(vShader: WebGLShader, fShader: WebGLShader): WebGLProgram {
+  protected makeAndUseProgram(
+    vShader: WebGLShader,
+    fShader: WebGLShader
+  ): WebGLProgram {
     const p = this.gl.createProgram();
     this.gl.attachShader(p, vShader);
     this.gl.attachShader(p, fShader);
@@ -47,13 +53,25 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
     return p;
   }
 
-  protected updateFloatAttribute(array: Float32Array, drawType: number, attributeName: string, itemSize: number = 1): WebGLBuffer {
+  protected updateFloatAttribute(
+    array: Float32Array,
+    drawType: number,
+    attributeName: string,
+    itemSize: number = 1
+  ): WebGLBuffer {
     const attributeLocation = this.attributeLocation(attributeName);
     const buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, array, drawType);
     this.gl.enableVertexAttribArray(attributeLocation);
-    this.gl.vertexAttribPointer(attributeLocation, itemSize, this.gl.FLOAT, false, 0, 0);
+    this.gl.vertexAttribPointer(
+      attributeLocation,
+      itemSize,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
     return buffer;
   }
 
@@ -65,11 +83,16 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
     return this.uniformLocations[uniformName];
   }
 
-  private gatherAttributeLocations(program: WebGLProgram): ShaderAttributeLocations {
+  private gatherAttributeLocations(
+    program: WebGLProgram
+  ): ShaderAttributeLocations {
     let locations = {};
 
     {
-      const attributes = this.gl.getProgramParameter(program, this.gl.ACTIVE_ATTRIBUTES);
+      const attributes = this.gl.getProgramParameter(
+        program,
+        this.gl.ACTIVE_ATTRIBUTES
+      );
       for (let i = 0; i < attributes; i++) {
         const name = this.gl.getActiveAttrib(program, i).name;
         locations[name] = this.gl.getAttribLocation(program, name);
@@ -79,11 +102,16 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
     return locations;
   }
 
-  private gatherUniformLocations(program: WebGLProgram): ShaderUniformLocations {
+  private gatherUniformLocations(
+    program: WebGLProgram
+  ): ShaderUniformLocations {
     let locations = {};
 
     {
-      const uniforms = this.gl.getProgramParameter(program, this.gl.ACTIVE_UNIFORMS);
+      const uniforms = this.gl.getProgramParameter(
+        program,
+        this.gl.ACTIVE_UNIFORMS
+      );
       for (let i = 0; i < uniforms; i++) {
         const name = this.gl.getActiveUniform(program, i).name;
         locations[name] = this.gl.getUniformLocation(program, name);
@@ -93,7 +121,10 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
     return locations;
   }
 
-  public templateShader(shader: string, values: { [propName: string]: string | number }): string {
+  public templateShader(
+    shader: string,
+    values: { [propName: string]: string | number }
+  ): string {
     let out = shader;
     for (const prop in values) {
       out = out.split(prop).join(values[prop].toString());
