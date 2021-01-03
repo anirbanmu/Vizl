@@ -1,4 +1,5 @@
 import type AudioAnalysisMetadata from '../AudioAnalysisMetadata';
+import type { Vector2d } from '../util';
 import BaseAudioVisualiser from './BaseAudioVisualiser';
 import type ShaderAttributeLocations from './ShaderAttributeLocations';
 import type ShaderUniformLocations from './ShaderUniformLocations';
@@ -21,9 +22,32 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
   }
 
+  protected resizeNeeded(): boolean {
+    return (
+      this.canvas.clientWidth !== this.gl.drawingBufferWidth ||
+      this.canvas.clientWidth !== this.gl.drawingBufferHeight
+    );
+  }
+
+  protected minDim(): number {
+    return Math.min(this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+  }
+
+  protected center(): Vector2d {
+    return {
+      x: this.gl.drawingBufferWidth / 2,
+      y: this.gl.drawingBufferHeight / 2,
+    };
+  }
+
   public resize(width: number = 0, height: number = 0): void {
     super.resize(width, height);
-    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.gl.viewport(
+      0,
+      0,
+      this.gl.drawingBufferWidth,
+      this.gl.drawingBufferHeight
+    );
   }
 
   protected compileShader(shaderType: number, shader: string): WebGLShader {

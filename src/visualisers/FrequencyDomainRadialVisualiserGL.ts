@@ -34,11 +34,18 @@ export default class FrequencyDomainRadialVisualiserGL extends BaseAudioVisualis
     );
     this.gl.uniform2fv(
       this.uniformLocation('dimensions'),
-      new Float32Array([this.canvas.width, this.canvas.height])
+      new Float32Array([
+        this.gl.drawingBufferWidth,
+        this.gl.drawingBufferHeight,
+      ])
     );
   }
 
   public render(analysisData: AudioAnalysisData): void {
+    if (this.resizeNeeded()) {
+      this.resize();
+    }
+
     this.gl.uniform4fv(
       this.uniformLocation('magnitudes[0]'),
       analysisData.frequencyData

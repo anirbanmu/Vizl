@@ -15,8 +15,8 @@ export default abstract class BaseAudioVisualiser {
   }
 
   public resize(width: number = 0, height: number = 0): void {
-    width = width === 0 ? document.body.clientWidth : width;
-    height = height === 0 ? document.body.clientHeight : height;
+    width = width === 0 ? this.canvas.clientWidth : width;
+    height = height === 0 ? this.canvas.clientHeight : height;
     this.canvas.width = width;
     this.canvas.height = height;
   }

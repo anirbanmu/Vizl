@@ -19,13 +19,17 @@ export default class TimeDomainRadialVisualiserGL extends BaseAudioVisualiserGL 
     this.gl.uniform2fv(
       this.uniformLocation('aspectScale'),
       new Float32Array([
-        minCanvasDim / this.canvas.width,
-        minCanvasDim / this.canvas.height,
+        minCanvasDim / this.gl.drawingBufferWidth,
+        minCanvasDim / this.gl.drawingBufferHeight,
       ])
     );
   }
 
   public render(analysisData: AudioAnalysisData): void {
+    if (this.resizeNeeded()) {
+      this.resize();
+    }
+
     this.updateFloatAttribute(
       analysisData.timeData,
       this.gl.DYNAMIC_DRAW,
