@@ -1,1 +1,3 @@
-export default interface ShaderUniformLocations { [propName: string]: WebGLUniformLocation };
+export default interface ShaderUniformLocations {
+  [propName: string]: WebGLUniformLocation;
+}

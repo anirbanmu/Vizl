@@ -1,4 +1,4 @@
-import type AudioAnalysisMetadata from "./AudioAnalysisMetadata";
+import type AudioAnalysisMetadata from './AudioAnalysisMetadata';
 
 export default class AudioAnalyser {
   public readonly minDb: number;
@@ -13,12 +13,19 @@ export default class AudioAnalyser {
   private timeDataWeighted: Float32Array;
   private timeAnalyser: AnalyserNode;
 
-  constructor(audioCtx: AudioContext, mediaSourceNode: MediaElementAudioSourceNode, frequencyFftSize: number, timeFftSize: number) {
+  constructor(
+    audioCtx: AudioContext,
+    mediaSourceNode: MediaElementAudioSourceNode,
+    frequencyFftSize: number,
+    timeFftSize: number
+  ) {
     this.frequencyAnalyser = audioCtx.createAnalyser();
     this.frequencyAnalyser.fftSize = frequencyFftSize;
     this.frequencyAnalyser.smoothingTimeConstant = 0.89;
     mediaSourceNode.connect(this.frequencyAnalyser);
-    this.frequencyData = new Float32Array(this.frequencyAnalyser.frequencyBinCount);
+    this.frequencyData = new Float32Array(
+      this.frequencyAnalyser.frequencyBinCount
+    );
 
     this.timeAnalyser = audioCtx.createAnalyser();
     this.timeAnalyser.fftSize = timeFftSize;
@@ -41,7 +48,8 @@ export default class AudioAnalyser {
   public getTimeDataExtraWeighted(weight: number): Float32Array {
     this.timeAnalyser.getFloatTimeDomainData(this.timeData);
     for (let i = 0; i < this.timeData.length; ++i) {
-      this.timeDataWeighted[i] = this.timeDataWeighted[i] * weight + this.timeData[i] * (1 - weight);
+      this.timeDataWeighted[i] =
+        this.timeDataWeighted[i] * weight + this.timeData[i] * (1 - weight);
     }
     return this.timeDataWeighted;
   }
