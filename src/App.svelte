@@ -102,12 +102,16 @@
 				audioElement.src = url.href;
 				trackUrlInputElement.placeholder = "Now playing: " + track.title;
 				trackUrlInput = "";
+				updateAudioState();
 				loading = false;
 			})
 			.catch((e) => {
 				trackUrlInput = "Sorry! That didn't work!";
 				setTimeout(() => {
 					trackUrlInput = "";
+					if (track) {
+						trackUrlInputElement.placeholder = "Now playing: " + track.title;
+					}
 					loading = false;
 				}, 2000);
 				console.log(e);
