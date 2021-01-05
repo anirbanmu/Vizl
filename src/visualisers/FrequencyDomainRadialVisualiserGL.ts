@@ -14,7 +14,8 @@ export default class FrequencyDomainRadialVisualiserGL extends BaseAudioVisualis
   ) {
     super(canvas, {
       ...analysisMetadata,
-      frequencyBinCount: Math.floor(0.74 * analysisMetadata.frequencyBinCount),
+      frequencyBinCount:
+        4 * Math.trunc((0.7 * analysisMetadata.frequencyBinCount) / 4), // Shader expects this to divisible by 4
     });
 
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);

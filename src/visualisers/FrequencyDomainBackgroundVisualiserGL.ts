@@ -9,7 +9,8 @@ export default class FrequencyDomainBackgroundVisualiserGL extends BaseAudioVisu
   ) {
     super(canvas, {
       ...analysisMetadata,
-      frequencyBinCount: Math.trunc(analysisMetadata.frequencyBinCount * 0.725),
+      frequencyBinCount:
+        4 * Math.trunc((analysisMetadata.frequencyBinCount * 0.725) / 4), // Shader expects this to divisible by 4
     });
 
     this.gl.blendFuncSeparate(
