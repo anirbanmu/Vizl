@@ -4,7 +4,6 @@
   import { faPlay } from '@fortawesome/free-solid-svg-icons/faPlay';
   import { faPause } from '@fortawesome/free-solid-svg-icons/faPause';
 
-  import { clientId } from './config';
   import type Track from './Track';
   import AudioVisual from './AudioVisual.svelte';
   import Footer from './Footer.svelte';
@@ -60,7 +59,7 @@
   //
   // New track input & resolution
   //
-  const soundcloudApiBaseUrl = 'https://api.soundcloud.com';
+  const resolveApiUrl = '/api/resolve';
 
   let trackUrlInput: string;
   let trackUrlInputElement: HTMLInputElement;
@@ -73,12 +72,11 @@
   let loading = false;
   function onClick(): void {
     loading = true;
-    const resolveIdentifierURL = new URL(
-      `${soundcloudApiBaseUrl}/resolve.json`
-    );
-    resolveIdentifierURL.searchParams.append('url', trackUrlInput);
-    resolveIdentifierURL.searchParams.append('client_id', clientId);
-    fetch(resolveIdentifierURL.href)
+    fetch(resolveApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: trackUrlInput }),
+    })
       .then((resp) => {
         if (!resp.ok) {
           throw resp.statusText;
@@ -97,10 +95,8 @@
 
         audioCtx.resume();
 
-        const url = new URL(t.streamUrl);
-        url.searchParams.append('client_id', clientId);
-        audioElement.src = url.href;
-        trackUrlInputElement.placeholder = 'Now playing: ' + track.title;
+        audioElement.src = t.streamUrl;
+        trackUrlInputElement.placeholder = 'Now playing: ' + t.title;
         trackUrlInput = '';
         updateAudioState();
         loading = false;
@@ -114,7 +110,6 @@
           }
           loading = false;
         }, 2000);
-        console.log(e);
       });
   }
 
@@ -145,6 +140,71 @@
 
   analysisRefresher();
 </script>
+
+<main>
+  <main-wrap>
+    <topbar>
+      <img src="logo.png" alt="Vizl" class="logo" />
+      <input
+        class="seek-bar control-child"
+        type="range"
+        bind:value={seekPosition}
+        bind:this={seekbar}
+        on:click={seekClick}
+        min="0"
+        max={seekMax}
+        disabled={loading || !audioState.hasSrc}
+        step="any"
+      />
+    </topbar>
+
+    <control-container>
+      <input
+        class="track-input control-child"
+        bind:this={trackUrlInputElement}
+        bind:value={trackUrlInput}
+        disabled={loading}
+        placeholder="Paste a SoundCloud track link here"
+      />
+      <button
+        class="control-button control-child"
+        on:click={(_) => onClick()}
+        disabled={!trackUrlExists || loading}
+      >
+        <Fa icon={faPlus} />
+      </button>
+      <button
+        class="control-button control-child"
+        on:click={(_) => playPause(audioState.paused)}
+        disabled={loading || !audioState.hasSrc}
+      >
+        <Fa icon={audioState.paused ? faPlay : faPause} />
+      </button>
+    </control-container>
+  </main-wrap>
+
+  <Footer />
+
+  <AudioVisual
+    zIndex={1}
+    opacity={0.5}
+    {analysisData}
+    visualiserLambda={(c) =>
+      new FrequencyDomainBackgroundVisualiserGL(c, analysisMetadata)}
+  />
+  <AudioVisual
+    zIndex={2}
+    {analysisData}
+    visualiserLambda={(c) =>
+      new TimeDomainRadialVisualiserGL(c, analysisMetadata)}
+  />
+  <AudioVisual
+    zIndex={3}
+    {analysisData}
+    visualiserLambda={(c) =>
+      new FrequencyDomainRadialVisualiserGL(c, analysisMetadata)}
+  />
+</main>
 
 <style>
   main {
@@ -250,58 +310,3 @@
     width: 5px;
   }
 </style>
-
-<main>
-  <main-wrap>
-    <topbar>
-      <img src="logo.png" alt="Vizl" class="logo" />
-      <input
-        class="seek-bar control-child"
-        type="range"
-        bind:value={seekPosition}
-        bind:this={seekbar}
-        on:click={seekClick}
-        min="0"
-        max={seekMax}
-        disabled={loading || !audioState.hasSrc}
-        step="any" />
-    </topbar>
-
-    <control-container>
-      <input
-        class="track-input control-child"
-        bind:this={trackUrlInputElement}
-        bind:value={trackUrlInput}
-        disabled={loading}
-        placeholder="Paste a SoundCloud track link here" />
-      <button
-        class="control-button control-child"
-        on:click={(_) => onClick()}
-        disabled={!trackUrlExists || loading}>
-        <Fa icon={faPlus} />
-      </button>
-      <button
-        class="control-button control-child"
-        on:click={(_) => playPause(audioState.paused)}
-        disabled={loading || !audioState.hasSrc}>
-        <Fa icon={audioState.paused ? faPlay : faPause} />
-      </button>
-    </control-container>
-  </main-wrap>
-
-  <Footer />
-
-  <AudioVisual
-    zIndex={1}
-    opacity={0.5}
-    {analysisData}
-    visualiserLambda={(c) => new FrequencyDomainBackgroundVisualiserGL(c, analysisMetadata)} />
-  <AudioVisual
-    zIndex={2}
-    {analysisData}
-    visualiserLambda={(c) => new TimeDomainRadialVisualiserGL(c, analysisMetadata)} />
-  <AudioVisual
-    zIndex={3}
-    {analysisData}
-    visualiserLambda={(c) => new FrequencyDomainRadialVisualiserGL(c, analysisMetadata)} />
-</main>
