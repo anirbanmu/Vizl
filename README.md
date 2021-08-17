@@ -1,8 +1,8 @@
 # [Vizl](https://vizl.anirbanmu.com)
 
-A simple music visualiser for Soundcloud tracks using [WebGL](https://get.webgl.org/), [Svelte](https://svelte.dev/) & [Typescript](https://www.typescriptlang.org/).
+A simple music visualiser for SoundCloud® tracks using [WebGL](https://get.webgl.org/), [Svelte](https://svelte.dev/) & [Typescript](https://www.typescriptlang.org/).
 
-To see it in action, go [here](https://vizl.anirbanmu.com), enter a link like this [one](https://soundcloud.com/nocopyrightsounds/alan-walker-fade-ncs-release) from Soundcloud, and hit the plus button!
+To see it in action, go [here](https://vizl.anirbanmu.com), enter a link like this [one](https://soundcloud.com/nocopyrightsounds/alan-walker-fade-ncs-release) from SoundCloud®, and hit the plus button!
 
 ## Development
 
