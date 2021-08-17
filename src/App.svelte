@@ -86,8 +86,10 @@
       .then((json) => {
         return {
           streamUrl: json.stream_url,
+          url: json.url,
           title: json.title,
           artwork: json.artwork_url,
+          user: json.user,
         };
       })
       .then((t: Track) => {
@@ -96,18 +98,16 @@
         audioCtx.resume();
 
         audioElement.src = t.streamUrl;
-        trackUrlInputElement.placeholder = 'Now playing: ' + t.title;
         trackUrlInput = '';
+        trackUrlInputElement.placeholder = t.url;
         updateAudioState();
         loading = false;
       })
       .catch((e) => {
-        trackUrlInput = "Sorry! That didn't work!";
+        trackUrlInput = trackUrlInputElement.placeholder =
+          "Sorry! That didn't work! Try another Soundcloud link.";
         setTimeout(() => {
           trackUrlInput = '';
-          if (track) {
-            trackUrlInputElement.placeholder = 'Now playing: ' + track.title;
-          }
           loading = false;
         }, 2000);
       });
@@ -181,6 +181,18 @@
         <Fa icon={audioState.paused ? faPlay : faPause} />
       </button>
     </control-container>
+
+    <now-playing-container>
+      {#if track && !loading && audioState.hasSrc}
+        <track-data>
+          <p>
+            Now playing:
+            <a href={track.url} alt="track link">{track.title}</a> uploaded by
+            <a href={track.user.profile} alt="uploader">{track.user.name}</a>
+          </p>
+        </track-data>
+      {/if}
+    </now-playing-container>
   </main-wrap>
 
   <Footer />
@@ -260,6 +272,24 @@
 
   .control-button {
     flex-grow: 1;
+  }
+
+  now-playing-container {
+    align-items: center;
+    position: relative;
+    width: 90%;
+    margin: 0em auto 0 auto;
+    display: flex;
+    z-index: 99;
+  }
+
+  track-data {
+    font-size: 0.7em;
+    opacity: 0.6;
+  }
+
+  track-data:hover {
+    opacity: 1;
   }
 
   .seek-bar {
