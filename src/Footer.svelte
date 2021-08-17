@@ -3,7 +3,7 @@
     <a href="https://soundcloud.com/" target="_blank">
       <img
         src="powered_by_white-371bd6967352fcc89673d4c81f7e5661.png"
-        alt="powered by soundcloud"
+        alt="powered by SoundCloud®"
         class="powered-by-soundcloud"
       />
     </a>
@@ -25,7 +25,7 @@
     <a href="https://soundcloud.com/" target="_blank">
       <img
         src="powered_by_white-371bd6967352fcc89673d4c81f7e5661.png"
-        alt="powered by soundcloud"
+        alt="powered by SoundCloud®"
         class="powered-by-soundcloud"
       />
     </a>
