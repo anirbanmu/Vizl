@@ -187,8 +187,13 @@
         <track-data>
           <p>
             Now playing:
-            <a href={track.url} alt="track link">{track.title}</a> uploaded by
-            <a href={track.user.profile} alt="uploader">{track.user.name}</a>
+            <a href={track.url} alt="track link" target="_blank"
+              >{track.title}</a
+            >
+            uploaded by
+            <a href={track.user.profile} alt="uploader" target="_blank"
+              >{track.user.name}</a
+            >
           </p>
         </track-data>
       {/if}
