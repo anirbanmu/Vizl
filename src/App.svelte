@@ -105,7 +105,7 @@
       })
       .catch((e) => {
         trackUrlInput = trackUrlInputElement.placeholder =
-          "Sorry! That didn't work! Try another Soundcloud link.";
+          "Sorry! That didn't work! Try another SoundCloud® link.";
         setTimeout(() => {
           trackUrlInput = '';
           loading = false;
@@ -164,7 +164,7 @@
         bind:this={trackUrlInputElement}
         bind:value={trackUrlInput}
         disabled={loading}
-        placeholder="Paste a SoundCloud track link here"
+        placeholder="Paste a SoundCloud® track link here"
       />
       <button
         class="control-button control-child"
