@@ -44,8 +44,10 @@ app.post('/api/resolve', async (req, res) => {
     ).resolve(urlToResolve);
     res.json({
       stream_url: resolved.streamUrl,
+      url: resolved.url,
       title: resolved.title,
       artwork: resolved.artwork,
+      user: resolved.user,
     });
   } catch (e: unknown) {
     if (e instanceof SoundcloudApiHttpError) {
@@ -91,9 +93,13 @@ class SoundcloudApi {
   constructor(private clientId: string, private clientSecret: string) {}
 
   // Get the resolved streaming URL for the link provided
-  public async resolve(
-    trackUrl: string
-  ): Promise<{ streamUrl: string; title: string; artwork: string | null }> {
+  public async resolve(trackUrl: string): Promise<{
+    streamUrl: string;
+    url: string;
+    title: string;
+    artwork: string | null;
+    user: { name: string; profile: string };
+  }> {
     await this.auth();
 
     const resolveUrl = new URL(SOUNDCLOUD_RESOLVE_API_URL);
@@ -123,8 +129,13 @@ class SoundcloudApi {
 
     return {
       streamUrl: redirectRes.data.location,
+      url: trackData.permalink_url,
       title: trackData.title,
       artwork: trackData.artwork_url ?? null,
+      user: {
+        name: trackData.user.username,
+        profile: trackData.user.permalink_url,
+      },
     };
   }
 
