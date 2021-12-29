@@ -103,7 +103,7 @@
         updateAudioState();
         loading = false;
       })
-      .catch((e) => {
+      .catch((_e) => {
         trackUrlInput = trackUrlInputElement.placeholder =
           "Sorry! That didn't work! Try another SoundCloud® link.";
         setTimeout(() => {
