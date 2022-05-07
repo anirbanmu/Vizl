@@ -59,9 +59,10 @@ app.post('/api/resolve', async (req, res) => {
 });
 
 const REDIS_PREFIX = 'vizl:';
+const REDIS_TLS_URL = process.env.REDIS_TLS_URL + '';
 const redis =
   env === 'production'
-    ? new ioredis(process.env.REDIS_TLS_URL, {
+    ? new ioredis(REDIS_TLS_URL, {
         tls: { rejectUnauthorized: false },
         keyPrefix: REDIS_PREFIX,
       })
