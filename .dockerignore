@@ -1,0 +1,10 @@
+.vscode
+node_modules
+.dockerignore
+.env.*
+Dockerfile
+.gitignore
+LICENSE
+README.md
+server.js
+fly.toml
