@@ -33,10 +33,8 @@ You can run the newly built app with `yarn start`. This uses [Express](https://e
 ## [fly.io](https://fly.io/)
 To run this on fly.io:
 - Create an app with (flyctl)[https://fly.io/docs/flyctl/installing/] and replace the <APP-NAME> in fly.toml.
-- Create a redis instance with `flyctl` in the same region. Note down its private URL, and replace the `redis:` with `rediss:`. This is referred to as `<REDIS-TLS-URL>`.
 - `flyctl secrets set SOUNDCLOUD_CLIENT_ID=<SOUNDCLOUD-CLIENT-ID>`
 - `flyctl secrets set SOUNDCLOUD_CLIENT_SECRET=<SOUNDCLOUD-CLIENT-SECRET>`
-- `flyctl secrets set REDIS_TLS_URL=<REDIS-TLS-URL>`
 - `flyctl deploy`
 
 ### Details
