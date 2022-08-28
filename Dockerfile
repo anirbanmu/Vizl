@@ -28,8 +28,6 @@ RUN addgroup -S ${USER} && adduser -D -H -S -G ${USER} ${USER}
 
 WORKDIR /src
 
-RUN mkdir /dist 
-
 # Copy built svelte files & compiled server.js
 ARG DIST_DIR_ARG="/dist"
 ENV DIST_DIR ${DIST_DIR_ARG}
