@@ -5,6 +5,7 @@ import path from 'path';
 import axios from 'axios';
 import url from 'url';
 import ioredis from 'ioredis';
+import process from 'process';
 
 const app = express();
 app.use(compression());
@@ -14,9 +15,10 @@ if (env === 'production') {
   app.use(sslifyEnforce.HTTPS({ trustProtoHeader: true }));
 }
 
-app.use(express.static(__dirname + '/public'));
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'public', 'static', 'index.html'));
+const publicDir = process.env.DIST_DIR || __dirname + '/public';
+app.use(express.static(publicDir));
+app.get('*', (_req, res) => {
+  res.sendFile(path.resolve(publicDir, 'static', 'index.html'));
 });
 
 const soundcloudClientId = process.env.SOUNDCLOUD_CLIENT_ID + '';
@@ -69,9 +71,24 @@ const redis =
     : new ioredis({ keyPrefix: REDIS_PREFIX });
 
 const port = process.env.PORT || 8081;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log('Express: listening on port ' + port);
 });
+
+const shutdown = (signal: NodeJS.Signals) => {
+  console.log(`${signal} received. Starting shutdown...`);
+  server.close(() => {
+    console.log('Express: HTTP server closed');
+    redis.quit(() => {
+      console.log('Redis: client closed.');
+      console.log('Shutdown complete. Exiting...');
+      process.exit(0);
+    });
+  });
+};
+
+process.on('SIGINT', (signal) => shutdown(signal));
+process.on('SIGTERM', (signal) => shutdown(signal));
 
 const SOUNDCLOUD_API_BASE_URL = 'https://api.soundcloud.com';
 const SOUNDCLOUD_OAUTH_TOKEN_API_URL = `${SOUNDCLOUD_API_BASE_URL}/oauth2/token`;
