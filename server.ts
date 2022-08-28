@@ -16,7 +16,7 @@ if (env === 'production') {
 
 app.use(express.static(__dirname + '/public'));
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+  res.sendFile(path.resolve(__dirname, 'public', 'static', 'index.html'));
 });
 
 const soundcloudClientId = process.env.SOUNDCLOUD_CLIENT_ID + '';

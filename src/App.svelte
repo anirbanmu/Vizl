@@ -144,7 +144,7 @@
 <main>
   <main-wrap>
     <topbar>
-      <img src="logo.png" alt="Vizl" class="logo" />
+      <img src="/static/logo.png" alt="Vizl" class="logo" />
       <input
         class="seek-bar control-child"
         type="range"
