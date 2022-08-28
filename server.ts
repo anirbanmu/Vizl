@@ -4,8 +4,8 @@ import sslifyEnforce from 'express-sslify';
 import path from 'path';
 import axios from 'axios';
 import url from 'url';
-import ioredis from 'ioredis';
 import process from 'process';
+import KeyV from 'keyv';
 
 const app = express();
 app.use(compression());
@@ -60,15 +60,7 @@ app.post('/api/resolve', async (req, res) => {
   }
 });
 
-const REDIS_PREFIX = 'vizl:';
-const REDIS_TLS_URL = process.env.REDIS_TLS_URL + '';
-const redis =
-  env === 'production'
-    ? new ioredis(REDIS_TLS_URL, {
-        tls: { rejectUnauthorized: false },
-        keyPrefix: REDIS_PREFIX,
-      })
-    : new ioredis({ keyPrefix: REDIS_PREFIX });
+const keyv = new KeyV({ namespace: 'vizl' });
 
 const port = process.env.PORT || 8081;
 const server = app.listen(port, () => {
@@ -79,11 +71,8 @@ const shutdown = (signal: NodeJS.Signals) => {
   console.log(`${signal} received. Starting shutdown...`);
   server.close(() => {
     console.log('Express: HTTP server closed');
-    redis.quit(() => {
-      console.log('Redis: client closed.');
-      console.log('Shutdown complete. Exiting...');
-      process.exit(0);
-    });
+    console.log('Shutdown complete. Exiting...');
+    process.exit(0);
   });
 };
 
@@ -163,7 +152,7 @@ class SoundcloudApi {
       return;
     }
 
-    let accessToken = await redis.get(SOUNDCLOUD_ACCESS_TOKEN_KEY);
+    let accessToken = await keyv.get(SOUNDCLOUD_ACCESS_TOKEN_KEY);
     if (accessToken === null || accessToken === undefined) {
       const res = await axios.post(
         SOUNDCLOUD_OAUTH_TOKEN_API_URL,
@@ -183,17 +172,16 @@ class SoundcloudApi {
 
       const expireSeconds = parseInt(res.data.expires_in);
       if (!isNaN(expireSeconds)) {
-        const r = await redis.set(
+        await keyv.set(
           SOUNDCLOUD_ACCESS_TOKEN_KEY,
           accessToken,
-          'EX',
-          Math.floor(expireSeconds / 2)
+          Math.floor(expireSeconds / 2) * 1000
         );
       }
 
-      console.log('SoundcloudApi: set new access token in redis');
+      console.log('SoundcloudApi: set new access token in cache');
     } else {
-      console.log('SoundcloudApi: found existing access token in redis');
+      console.log('SoundcloudApi: found existing access token in cache');
     }
 
     this.accessToken = accessToken;
