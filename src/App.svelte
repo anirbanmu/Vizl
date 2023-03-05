@@ -187,11 +187,11 @@
         <track-data>
           <p>
             Now playing:
-            <a href={track.url} alt="track link" target="_blank"
+            <a href={track.url} target="_blank" rel="noreferrer"
               >{track.title}</a
             >
             uploaded by
-            <a href={track.user.profile} alt="uploader" target="_blank"
+            <a href={track.user.profile} target="_blank" rel="noreferrer"
               >{track.user.name}</a
             >
           </p>
@@ -310,6 +310,7 @@
   }
 
   input[type='range'] {
+    appearance: none;
     -webkit-appearance: none;
     border-radius: 2px;
     box-shadow: none;

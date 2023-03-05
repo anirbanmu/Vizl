@@ -1,6 +1,6 @@
 <footer>
   <space-holder>
-    <a href="https://soundcloud.com/" target="_blank">
+    <a href="https://soundcloud.com/" target="_blank" rel="noreferrer">
       <img
         src="/static/powered_by_white-371bd6967352fcc89673d4c81f7e5661.png"
         alt="powered by SoundCloud®"
@@ -11,18 +11,21 @@
 
   <text-footer>
     Source @
-    <a href="https://github.com/anirbanmu/Vizl" target="_blank">Github</a>. Code
-    & visualizations by
-    <a href="https://github.com/anirbanmu" target="_blank"
+    <a href="https://github.com/anirbanmu/Vizl" target="_blank" rel="noreferrer"
+      >Github</a
+    >. Code & visualizations by
+    <a href="https://github.com/anirbanmu" target="_blank" rel="noreferrer"
       >Anirban Mukhopadhyay</a
     >. Layout help by
-    <a href="https://www.flickr.com/photos/dickbaker" target="_blank"
-      >Dick Baker</a
+    <a
+      href="https://www.flickr.com/photos/dickbaker"
+      target="_blank"
+      rel="noreferrer">Dick Baker</a
     >. Logo contributed by a cup of noodles.
   </text-footer>
 
   <image-footer>
-    <a href="https://soundcloud.com/" target="_blank">
+    <a href="https://soundcloud.com/" target="_blank" rel="noreferrer">
       <img
         src="/static/powered_by_white-371bd6967352fcc89673d4c81f7e5661.png"
         alt="powered by SoundCloud®"
