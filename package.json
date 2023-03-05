@@ -6,7 +6,7 @@
     "node": "^18.14"
   },
   "scripts": {
-    "build": "rollup -c && yarn run build-server",
+    "build": "rollup -c && npm run build-server",
     "dev": "rollup -c -w",
     "start": "node server.js",
     "validate": "svelte-check",

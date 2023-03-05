@@ -6,14 +6,15 @@ To see it in action, go [here](https://vizl.anirbanmu.com), enter a link like th
 
 ## Development
 
-- Make sure you have [Node](https://nodejs.org/en/download/package-manager/) & [yarn](https://yarnpkg.com/lang/en/docs/install) installed
+- Make sure you have [Node](https://nodejs.org/en/download/package-manager/) & npm [installed](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 - Clone the repo
 - `cd` into repo directory
-- `yarn install`
+- `npm install`
 
 ...then start the dev server [Rollup](https://rollupjs.org) + [Express](https://expressjs.com/):
+
 ```bash
-yarn dev
+npm run dev
 ```
 
 Navigate to [localhost:8081](http://localhost:8081). You should see Vizl running. Edit a component file in `src`, save it, and reload the page to see your changes.
@@ -25,14 +26,16 @@ If you're using [Visual Studio Code](https://code.visualstudio.com/) we recommen
 To create an optimised version of the app:
 
 ```bash
-yarn build
+npm run build
 ```
 
-You can run the newly built app with `yarn start`. This uses [Express](https://expressjs.com/) to serve the built [Svelte](https://svelte.dev/) app.
+You can run the newly built app with `npm run start`. This uses [Express](https://expressjs.com/) to serve the built [Svelte](https://svelte.dev/) app.
 
 ## [fly.io](https://fly.io/)
+
 To run this on fly.io:
-- Create an app with (flyctl)[https://fly.io/docs/flyctl/installing/] and replace the <APP-NAME> in fly.toml.
+
+- Create an app with [flyctl](https://fly.io/docs/flyctl/installing/) and replace the <APP-NAME> in fly.toml.
 - `flyctl secrets set SOUNDCLOUD_CLIENT_ID=<SOUNDCLOUD-CLIENT-ID>`
 - `flyctl secrets set SOUNDCLOUD_CLIENT_SECRET=<SOUNDCLOUD-CLIENT-SECRET>`
 - `flyctl deploy`
