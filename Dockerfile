@@ -1,4 +1,4 @@
-FROM docker.io/library/node:18-alpine AS base-image
+FROM docker.io/library/node:20-alpine AS base-image
 RUN apk update && apk upgrade && rm -rf /var/cache/apk/* && npm install -g npm
 
 # Build svelte app into /src/public/build & server.js
