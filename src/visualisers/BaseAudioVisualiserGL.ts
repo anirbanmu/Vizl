@@ -4,6 +4,15 @@ import BaseAudioVisualiser from './BaseAudioVisualiser';
 import type ShaderAttributeLocations from './ShaderAttributeLocations';
 import type ShaderUniformLocations from './ShaderUniformLocations';
 
+class WebGLInitializationException extends Error {
+  constructor(error: string) {
+    super(error);
+
+    // Set the prototype explicitly.
+    Object.setPrototypeOf(this, WebGLInitializationException.prototype);
+  }
+}
+
 export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser {
   protected gl: WebGLRenderingContext;
   private attributeLocations: ShaderAttributeLocations = {};
@@ -15,7 +24,12 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
   ) {
     super(canvas, analysisMetadata);
 
-    this.gl = this.canvas.getContext('webgl');
+    let glContext = this.canvas.getContext('webgl');
+    if (glContext === null || glContext === undefined) {
+      throw new WebGLInitializationException('no WebGL context');
+    }
+
+    this.gl = glContext;
     this.gl.clearColor(0.0, 0.0, 0.0, 0.0); // Transparent
     this.gl.enable(this.gl.DEPTH_TEST);
     this.gl.depthFunc(this.gl.LEQUAL);
@@ -52,6 +66,9 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
 
   protected compileShader(shaderType: number, shader: string): WebGLShader {
     const s = this.gl.createShader(shaderType);
+    if (s === null || s === undefined) {
+      throw new WebGLInitializationException('failed to create WebGL shader');
+    }
     this.gl.shaderSource(s, shader);
     this.gl.compileShader(s);
     if (!this.gl.getShaderParameter(s, this.gl.COMPILE_STATUS)) {
@@ -65,6 +82,9 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
     fShader: WebGLShader
   ): WebGLProgram {
     const p = this.gl.createProgram();
+    if (p === null || p === undefined) {
+      throw new WebGLInitializationException('failed to create WebGL program');
+    }
     this.gl.attachShader(p, vShader);
     this.gl.attachShader(p, fShader);
     this.gl.linkProgram(p);
@@ -85,6 +105,9 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
   ): WebGLBuffer {
     const attributeLocation = this.attributeLocation(attributeName);
     const buffer = this.gl.createBuffer();
+    if (buffer === null || buffer === undefined) {
+      throw new WebGLInitializationException('failed to create WebGL buffer');
+    }
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, array, drawType);
     this.gl.enableVertexAttribArray(attributeLocation);
@@ -110,15 +133,20 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
   private gatherAttributeLocations(
     program: WebGLProgram
   ): ShaderAttributeLocations {
-    let locations = {};
-
+    let locations: ShaderAttributeLocations = {};
     {
       const attributes = this.gl.getProgramParameter(
         program,
         this.gl.ACTIVE_ATTRIBUTES
       );
       for (let i = 0; i < attributes; i++) {
-        const name = this.gl.getActiveAttrib(program, i).name;
+        const attr = this.gl.getActiveAttrib(program, i);
+        if (attr === null || attr === undefined) {
+          throw new WebGLInitializationException(
+            'failed to get WebGL attribute'
+          );
+        }
+        const name = attr.name;
         locations[name] = this.gl.getAttribLocation(program, name);
       }
     }
@@ -129,7 +157,7 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
   private gatherUniformLocations(
     program: WebGLProgram
   ): ShaderUniformLocations {
-    let locations = {};
+    let locations: ShaderUniformLocations = {};
 
     {
       const uniforms = this.gl.getProgramParameter(
@@ -137,8 +165,19 @@ export default abstract class BaseAudioVisualiserGL extends BaseAudioVisualiser 
         this.gl.ACTIVE_UNIFORMS
       );
       for (let i = 0; i < uniforms; i++) {
-        const name = this.gl.getActiveUniform(program, i).name;
-        locations[name] = this.gl.getUniformLocation(program, name);
+        const attr = this.gl.getActiveUniform(program, i);
+        if (attr === null || attr === undefined) {
+          throw new WebGLInitializationException(
+            'failed to get WebGL active uniform'
+          );
+        }
+        const uniformLocation = this.gl.getUniformLocation(program, attr.name);
+        if (uniformLocation === null || uniformLocation === undefined) {
+          throw new WebGLInitializationException(
+            'failed to get WebGL active uniform location'
+          );
+        }
+        locations[attr.name] = uniformLocation;
       }
     }
 
