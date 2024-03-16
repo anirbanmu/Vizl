@@ -1,51 +1,51 @@
-# fly.toml file generated for vizl on 2022-08-28T13:19:07-07:00
+# fly.toml app configuration file generated for vizl on 2024-03-16T12:32:59-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "<APP-NAME>"
-kill_signal = "SIGINT"
-kill_timeout = 5
-processes = []
-
-[build]
-  dockerfile = "Dockerfile"
-
-[env]
-  PORT = "8080"
-  NODE_ENV = "production"
+app = '<APP-NAME>'
+primary_region = 'sjc'
+kill_signal = 'SIGINT'
+kill_timeout = '5s'
 
 [experimental]
-  allowed_public_ports = []
   auto_rollback = true
 
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '8080'
+
 [[services]]
-  http_checks = []
+  protocol = 'tcp'
   internal_port = 8080
-  processes = ["app"]
-  protocol = "tcp"
-  script_checks = []
+  processes = ['app']
+
+[[services.ports]]
+    port = 80
+    handlers = ['http']
+    force_https = true
+
+[[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
+
   [services.concurrency]
+    type = 'connections'
     hard_limit = 25
     soft_limit = 20
-    type = "connections"
 
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 80
+[[services.tcp_checks]]
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '1s'
 
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
+[[statics]]
+  guest_path = '/dist/build'
+  url_prefix = '/build'
 
-  [[services.tcp_checks]]
-    grace_period = "1s"
-    interval = "15s"
-    restart_limit = 0
-    timeout = "2s"
-
-  [[statics]]
-    guest_path = "/dist/build"
-    url_prefix = "/build"
-
-  [[statics]]
-    guest_path = "/dist/static"
-    url_prefix = "/static"
+[[statics]]
+  guest_path = '/dist/static'
+  url_prefix = '/static'
