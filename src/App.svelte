@@ -67,7 +67,7 @@
   let trackUrlExists = false;
   $: trackUrlExists = (trackUrlInput || '').length > 0;
 
-  let track: Track = null;
+  let track: Track | null = null;
 
   let loading = false;
   function onClick(): void {
